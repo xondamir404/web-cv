@@ -1,0 +1,24 @@
+[
+    {
+      "date": "2026-05-22 16:30",
+      "title": "Sarlavha (ixtiyoriy)",
+      "text": "fon test",
+      "image": "images/kitoblar.jpg"   
+    },
+
+    {
+      "date": "2026-06-18 14:56",
+      "title": "O captaon my captain",
+      "text": "bu joyi eng tasirli joyi bo'lgan kinoni",
+      "video": "videos/O_captain_my_captain.mp4"  
+    },
+
+    {
+   "date":  "2026-06-01 14:30",
+   "title": "HTB — Academy Machine",
+    "text":  "Nihoyat ushbu mashinani ham pwn qildim!"
+  }
+]
+
+
+    

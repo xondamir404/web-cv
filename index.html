@@ -1,0 +1,3258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Xondamir Qarshiboyev</title>
+<link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600&family=Roboto:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+<style>
+/* ============================================================
+   :root — ASOSIY RANGLAR
+   Barcha ranglar
+   ============================================================ */
+:root {
+  --tb-h: 48px;                        /* Taskbar balandligi px da         */
+  --tb-bg: rgba(15,15,20,0.88);        /* Taskbar fon rangi                */
+  --tb-border: rgba(255,255,255,0.08); /* Taskbar yuqori chizig'i          */
+  --win-bg: rgba(25,25,35,0.97);       /* Oyna fon rangi                   */
+  --win-border: rgba(255,255,255,0.12);/* Oyna chegara rangi               */
+  --accent: #0078d4;                   /* Windows ko'k rangi               */
+  --text: #e4e8f0;                     /* Asosiy matn rangi                */
+  --text-dim: #888ea8;                 /* Ikkinchi darajali matn           */
+  --green: #00ff88;                    /* Yashil accent (hacker stili)     */
+  --radius: 8px;                       /* Burchak yumaloqligi              */
+}
+
+/* ─── RESET ─── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  width:100%; height:100%;
+  overflow:hidden;
+  font-family:'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   DESKTOP — asosiy konteyner
+   ============================================================ */
+#desktop {
+  width:100vw; height:100vh;
+  display:flex; flex-direction:column;
+  position:relative; overflow:hidden;
+  user-select:none;
+}
+/* Oyna ichidagi tugmalar user-select:none dan ozod */
+.win-body button { user-select:none; pointer-events:auto; }
+.bio-main { user-select:text; }
+.bio-main button { 
+  user-select:none; 
+  pointer-events:auto !important; 
+  cursor:pointer !important;
+}
+.bio-lang { pointer-events:auto !important; }
+.bio-lang * { pointer-events:auto !important; }
+/* ============================================================
+   WALLPAPER — FON RASMI
+   ─────────────────────────────────────────────────────────────
+
+   ─────────────────────────────────────────────────────────────
+   ============================================================ */
+#wallpaper {
+  position:absolute; inset:0; z-index:0;
+  background-image: url('wallpaperweb.jpg'); /* ← FAQAT SHU QATORNI O'ZGARTIRING */
+  background-color: #0a0c10;             /* Rasm yuklanmasa shu rang ko'rinadi */
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+/* ============================================================
+   DESKTOP MAYDONI — ikonlar joylashadigan joy
+   ============================================================ */
+#desktop-area {
+  flex:1; position:relative; z-index:2;
+  padding:20px;
+  display:flex; flex-direction:column;
+  align-items:flex-start; gap:6px;
+}
+
+/* ============================================================
+   DESKTOP IKONLARI
+   ─────────────────────────────────────────────────────────────
+   
+   ─────────────────────────────────────────────────────────────
+   ============================================================ */
+.d-icon {
+  display:flex; flex-direction:column;
+  align-items:center; gap:5px;
+  width:76px; padding:8px 4px;
+  border-radius:5px; cursor:pointer;
+  transition:background 0.12s;
+}
+.d-icon:hover    { background:rgba(255,255,255,0.10); }
+.d-icon:active   { background:rgba(255,255,255,0.18); }
+.d-icon.selected { background:rgba(0,120,212,0.30); outline:1px solid rgba(0,120,212,0.6); }
+
+/* Ikon rasmi */
+.d-icon img {
+  width:52px; height:52px;   /* ← Ikon o'lchamini shu yerdan o'zgartiring */
+  object-fit:contain;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+
+/* Ikon nomi — xuddi Windows kabi oq, soya bilan */
+.d-icon span {
+  font-size:12px; color:#fff;
+  text-align:center; line-height:1.3;
+  text-shadow:
+    0 1px 3px rgba(0,0,0,0.9),
+    0 0 8px rgba(0,0,0,0.7);
+  max-width:72px; word-break:break-word;
+}
+
+/* ============================================================
+   TASKBAR — PASTKI PANEL
+   ============================================================ */
+#taskbar {
+  height:var(--tb-h);
+  background:var(--tb-bg);
+  backdrop-filter:blur(24px) saturate(1.5);
+  -webkit-backdrop-filter:blur(24px) saturate(1.5);
+  border-top:1px solid var(--tb-border);
+  display:flex; align-items:center;
+  position:relative; z-index:100;
+  flex-shrink:0;
+  padding:0 8px;
+}
+
+/* ─── CHAP TOMON: ob-havo ─── */
+#tb-left {
+  display:flex; align-items:center;
+  gap:6px; padding:4px 8px;
+  border-radius:6px;
+  cursor:default; min-width:110px;
+}
+#tb-left:hover { background:rgba(255,255,255,0.06); }
+.tb-weather-icon { font-size:18px; }
+.tb-weather-info { display:flex; flex-direction:column; }
+.tb-weather-temp { font-size:13px; font-weight:500; color:#fff; line-height:1.2; }
+.tb-weather-desc { font-size:10px; color:var(--text-dim); line-height:1.2; }
+
+/* ============================================================
+   OB-HAVO HOVER OYNASI — batafsil iqlim ma'lumotlari
+   ============================================================ */
+#weather-popup {
+  position:absolute;
+  bottom:calc(var(--tb-h) + 8px);
+  left:8px;
+  width:280px;
+  background:rgba(18,20,30,0.98);
+  backdrop-filter:blur(30px);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:14px;
+  padding:18px;
+  z-index:400;
+  display:none;
+  box-shadow:0 8px 40px rgba(0,0,0,0.6);
+  animation:menuPop 0.18s ease;
+}
+#tb-left:hover #weather-popup { display:block; }
+
+/* Yuqori qism — katta harorat */
+.wp-header {
+  display:flex; align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+  padding-bottom:12px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.wp-temp-big {
+  font-size:42px; font-weight:300;
+  color:#fff; line-height:1;
+}
+.wp-icon-big { font-size:40px; }
+.wp-city {
+  font-size:11px; color:var(--text-dim);
+  margin-top:4px;
+}
+.wp-condition {
+  font-size:13px; color:#fff;
+  font-weight:500; margin-top:2px;
+}
+
+/* Ma'lumot qatorlari */
+.wp-row {
+  display:flex; align-items:center;
+  justify-content:space-between;
+  padding:6px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  font-size:12px;
+}
+.wp-row:last-child { border-bottom:none; }
+.wp-label { color:var(--text-dim); display:flex; align-items:center; gap:6px; }
+.wp-value { color:#fff; font-weight:500; }
+
+/* Min/Max harorat */
+.wp-minmax {
+  display:flex; gap:12px;
+  margin-top:12px; padding-top:12px;
+  border-top:1px solid rgba(255,255,255,0.08);
+}
+.wp-min { color:#64b5f6; font-size:12px; }
+.wp-max { color:#ef9a9a; font-size:12px; }
+.wp-mm-label { color:var(--text-dim); font-size:10px; }
+
+/* ─── O'RTA: pusk + searchbar + ochiq ilovalar ─── */
+#tb-center {
+  position:absolute; left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:4px;
+}
+
+/* Windows Start (Pusk) tugmasi
+   ─────────────────────────────────────────────────────────────
+   
+   ─────────────────────────────────────────────────────────────*/
+#start-btn {
+  width:40px; height:40px;
+  border-radius:var(--radius);
+  background:transparent; border:none;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:background 0.15s; position:relative;
+}
+#start-btn:hover    { background:rgba(255,255,255,0.10); }
+#start-btn.active   { background:rgba(255,255,255,0.08); }
+/* Windows 4 kvadrat logo SVG */
+#start-btn svg { width:18px; height:18px; }
+
+/* Search bar — uzun to'rtburchak */
+#searchbar {
+  width:300px; height:34px;   /* ← Kenglikni shu yerdan o'zgartiring */
+  background:rgba(255,255,255,0.10);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:6px;
+  display:flex; align-items:center;
+  padding:0 12px; gap:8px;
+  cursor:default;
+  transition:background 0.15s;
+}
+#searchbar:hover { background:rgba(255,255,255,0.13); }
+#searchbar svg   { width:14px; height:14px; opacity:0.5; flex-shrink:0; }
+#searchbar span  { font-size:12px; color:rgba(255,255,255,0.45); }
+
+/* Ochiq ilovalar tugmalari (search dan keyin paydo bo'ladi) */
+#tb-open-apps {
+  display:flex; align-items:center; gap:2px;
+}
+.tb-app-btn {
+  height:36px; padding:0 10px;
+  border-radius:6px;
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.10);
+  color:var(--text); font-size:11px;
+  cursor:pointer;
+  display:flex; align-items:center; gap:7px;
+  transition:background 0.13s; white-space:nowrap;
+  max-width:160px;
+}
+.tb-app-btn:hover  { background:rgba(255,255,255,0.12); }
+.tb-app-btn.active { border-bottom:2px solid var(--accent); }
+.tb-app-btn img    { width:16px; height:16px; object-fit:contain; }
+
+/* ─── O'NG TOMON: tizim ikonlari + soat ─── */
+#tb-right {
+  margin-left:auto;
+  display:flex; align-items:center; gap:2px;
+}
+
+/* Tizim ikonlari guruhi (wifi, ovoz, zaryad) */
+#tb-sys {
+  display:flex; align-items:center; gap:1px;
+  padding:4px 6px; border-radius:6px;
+  cursor:default;
+}
+#tb-sys:hover { background:rgba(255,255,255,0.07); }
+
+/* Har bir tizim ikoni */
+.sys-icon { font-size:14px; padding:0 2px; }
+
+/* ENG (til belgisi) */
+.sys-lang {
+  font-size:11px; color:#fff;
+  font-weight:600; padding:0 4px;
+  letter-spacing:0.5px;
+}
+
+/* Zaryad belgisi — yashil, chaqmoq bilan */
+.sys-battery {
+  position:relative; display:inline-flex;
+  align-items:center; justify-content:center;
+}
+.sys-battery .bat-icon { font-size:16px; filter:hue-rotate(120deg) brightness(1.2); }
+/* Chaqmoq belgisi zaryad ustida */
+.sys-battery .bat-bolt {
+  position:absolute; font-size:8px;
+  color:#ffff00; font-weight:900;
+  text-shadow:0 0 3px #ff0;
+}
+
+/* Soat va sana bloki */
+#tb-clock {
+  padding:3px 10px; border-radius:6px;
+  cursor:default; text-align:right;
+}
+#tb-clock:hover { background:rgba(255,255,255,0.07); }
+.tc-time { font-size:13px; font-weight:500; color:#fff; line-height:1.3; }
+.tc-date { font-size:11px; color:var(--text-dim); line-height:1.3; }
+.tc-loc  { font-size:10px; color:rgba(0,255,136,0.7); line-height:1.3; }
+
+/* ============================================================
+   PUSK MENYUSI
+   ============================================================ */
+#start-menu {
+  position:absolute;
+  /* O'rtadan chiqadi, pusk tugmasi ustidan */
+  left:50%; transform:translateX(-50%);
+  bottom:var(--tb-h);
+  width:280px;                          /* ← Menyu kengligini o'zgartirish */
+
+  /* Shaffof qorong'u */
+  background:rgba(50,52,60,0.75);
+  backdrop-filter:blur(30px) saturate(1.8);
+  -webkit-backdrop-filter:blur(30px) saturate(1.8);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:16px;                   /* Dumaloq burchak — rasmdagidek  */
+  padding:12px 8px;
+  z-index:500; display:none;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+
+  /* Paydo bo'lish animatsiyasi */
+  animation:menuPop 0.18s ease;
+}
+@keyframes menuPop {
+  from { transform:translateX(-50%) translateY(8px); opacity:0; }
+  to   { transform:translateX(-50%) translateY(0);   opacity:1; }
+}
+#start-menu.open { display:block; }
+
+/* Menyu sarlavhasi */
+.sm-title {
+  font-size:10px; color:rgba(255,255,255,0.45);
+  text-transform:uppercase; letter-spacing:1.5px;
+  padding:4px 12px 8px;
+}
+
+/* ─── HAR BIR PLATFORMA QATORI ─── */
+.sm-item {
+  display:flex; align-items:center; gap:14px;
+  padding:10px 12px; border-radius:10px;
+  cursor:pointer; transition:background 0.13s;
+}
+.sm-item:hover { background:rgba(255,255,255,0.10); }
+.sm-item:active { background:rgba(255,255,255,0.15); }
+
+/* Logo rasmi joylashadigan kvadrat
+   ─────────────────────────────────────────────────────────────
+   LOGO RASMLARNI ULASH UCHUN:
+   icons/ papkasiga quyidagi fayllarni qo'ying:
+   - telegram.png   (tavsiya: 64x64 piksel)
+   - linkedin.png
+   - gmail.png
+   - x.png
+   - reddit.png
+   - tryhackme.png
+   - hackthebox.png
+   - hackerone.png
+   ─────────────────────────────────────────────────────────────*/
+.sm-logo {
+  width:40px; height:40px;   /* ← Logo o'lchamini o'zgartirish */
+  border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; overflow:hidden;
+  background:rgba(255,255,255,0.1); /* Rasm yuklanmasa shu rang */
+}
+.sm-logo img {
+  width:100%; height:100%;
+  object-fit:cover; border-radius:10px;
+}
+
+/* Platforma nomi */
+.sm-name {
+  font-size:14px; font-weight:500;
+  color:#fff; flex:1;
+  letter-spacing:0.2px;
+}
+
+/* ============================================================
+   SEARCH DROPDOWN — qidiruv natijalari
+   ============================================================ */
+#search-dropdown {
+  position:absolute;
+  bottom:calc(100% + 6px);
+  left:0;
+  width:100%;
+  background:rgba(20,22,32,0.98);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px;
+  overflow:hidden;
+  display:none;
+  z-index:600;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+}
+#search-dropdown.open { display:block; }
+#lang-menu.open { display:block !important; }
+#bio-lang-menu.open { display:block !important; }
+
+/* Har bir natija qatori */
+.search-item {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 14px;
+  cursor:pointer;
+  transition:background 0.13s;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.search-item:last-child { border-bottom:none; }
+.search-item:hover { background:rgba(255,255,255,0.08); }
+
+/* Natija ikoni */
+.search-item .si-icon {
+  width:32px; height:32px;
+  border-radius:8px;
+  overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+  background:rgba(255,255,255,0.08);
+}
+.search-item .si-icon img {
+  width:100%; height:100%; object-fit:cover;
+}
+.search-item .si-name {
+  font-size:13px; color:#fff; font-weight:500;
+}
+.search-item .si-type {
+  font-size:10px; color:var(--text-dim); margin-top:2px;
+}
+
+/* Natija topilmasa */
+.search-empty {
+  padding:14px;
+  font-size:12px;
+  color:var(--text-dim);
+  text-align:center;
+}
+
+/* ─── TASDIQLASH OYNASI (confirm dialog) ─── */
+#confirm-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.45);
+  backdrop-filter:blur(6px);
+  z-index:800; display:none;
+  align-items:center; justify-content:center;
+}
+#confirm-overlay.open { display:flex; }
+
+#confirm-box {
+  background:rgba(28,30,42,0.98);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:14px; padding:28px 30px;
+  width:340px;
+  box-shadow:0 24px 60px rgba(0,0,0,0.7);
+  animation:winPop 0.18s ease;
+}
+.cf-head { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+.cf-logo {
+  width:46px; height:46px; border-radius:12px;
+  overflow:hidden; flex-shrink:0;
+  background:rgba(255,255,255,0.08);
+}
+.cf-logo img { width:100%; height:100%; object-fit:cover; }
+.cf-pname { font-size:16px; font-weight:600; color:#fff; }
+.cf-purl  { font-size:11px; color:var(--text-dim); margin-top:3px; word-break:break-all; }
+.cf-msg   { font-size:13px; color:rgba(255,255,255,0.55); margin-bottom:22px; line-height:1.6; }
+.cf-btns  { display:flex; gap:10px; justify-content:flex-end; }
+.cf-no {
+  padding:8px 20px; border-radius:7px;
+  border:1px solid rgba(255,255,255,0.15);
+  background:transparent; color:var(--text);
+  font-size:13px; cursor:pointer; transition:background 0.13s;
+}
+.cf-no:hover  { background:rgba(255,255,255,0.08); }
+.cf-yes {
+  padding:8px 20px; border-radius:7px;
+  border:none; background:var(--accent);
+  color:#fff; font-size:13px; font-weight:600;
+  cursor:pointer; transition:background 0.13s;
+}
+.cf-yes:hover { background:#006cbf; }
+
+/* ============================================================
+   OYNALAR — Windows tarzida
+   ============================================================ */
+.win {
+  position:absolute;
+  background:var(--win-bg);
+  border:1px solid var(--win-border);
+  border-radius:10px;
+  display:flex; flex-direction:column;
+  z-index:50; overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,0.65);
+  animation:winPop 0.18s ease;
+  /* Resize — sichqoncha bilan burchakdan tortib kengaytirish */
+  resize:both; min-width:400px; min-height:300px;
+}
+@keyframes winPop {
+  from { transform:scale(0.96); opacity:0; }
+  to   { transform:scale(1);    opacity:1; }
+}
+
+/* ─── OYNA SARLAVHA PANELI — File Explorer ko'rinishida ─── */
+.win-titlebar {
+  flex-shrink:0;
+  background:rgba(40,42,55,0.98);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+
+/* Tab qatori (yuqori) — xuddi brauzer tab kabi */
+.win-tabs {
+  height:32px; display:flex; align-items:center;
+  padding:0 0 0 10px;
+  gap:4px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  justify-content:space-between;
+}
+.win-tab {
+  height:24px; padding:0 14px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:5px 5px 0 0;
+  display:flex; align-items:center; gap:6px;
+  font-size:11px; color:var(--text);
+}
+.win-tab img { width:14px; height:14px; object-fit:contain; }
+.win-tab-close {
+  font-size:10px; color:var(--text-dim);
+  cursor:pointer; padding:0 2px;
+}
+.win-tab-close:hover { color:#ff5f57; }
+.win-tab-add {
+  width:24px; height:24px; border-radius:5px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; color:var(--text-dim); cursor:pointer;
+}
+
+/* Boshqaruv tugmalari qatori */
+.win-controls-bar {
+  height:36px; display:flex; align-items:center;
+  padding:0 12px; gap:6px;
+  flex-wrap:nowrap; overflow:hidden;
+}
+
+/* Navigatsiya tugmalari (←→↑↺) — faqat dekor */
+.win-nav-btn {
+  width:26px; height:26px; border-radius:5px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; color:var(--text-dim); cursor:default;
+  transition:background 0.13s;
+}
+.win-nav-btn:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+
+/* Manzil satri — PENTESTER > CV xondamir > Web_CV > ... */
+.win-address {
+  flex:1; height:26px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:5px; padding:0 10px;
+  display:flex; align-items:center; gap:4px;
+  font-size:11px; color:var(--text-dim);
+  margin:0 6px;
+}
+.win-address .path-sep { color:rgba(255,255,255,0.25); }
+.win-address .path-item { color:rgba(255,255,255,0.6); }
+.win-address .path-item.current { color:#fff; }
+
+/* Search (oyna ichidagi) — faqat dekor */
+.win-search {
+  width:160px; height:26px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:5px; padding:0 8px;
+  display:flex; align-items:center; gap:6px;
+  font-size:11px; color:var(--text-dim);
+}
+
+/* Oyna boshqaruv tugmalari — _, □, X */
+.win-btns {
+  display:flex; margin-left:auto; flex-shrink:0;
+}
+.win-btn {
+  width:46px; height:36px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; color:var(--text-dim);
+  cursor:pointer; transition:background 0.13s;
+  background:transparent; border:none;
+}
+.win-btn:hover { background:rgba(255,255,255,0.08); color:#fff; }
+.win-btn.close-btn:hover { background:#e81123; color:#fff; }
+
+/* ─── OYNA ICHKI MAYDONI ─── */
+.win-body {
+  flex:1; overflow-y:auto; overflow-x:hidden;
+  background:rgba(20,22,32,0.98);
+}
+.win-body::-webkit-scrollbar       { width:6px; }
+.win-body::-webkit-scrollbar-track { background:transparent; }
+.win-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:4px; }
+
+/* ─── STATUS BAR (pastki) ─── */
+.win-statusbar {
+  height:24px; flex-shrink:0;
+  background:rgba(30,32,45,0.98);
+  border-top:1px solid rgba(255,255,255,0.06);
+  display:flex; align-items:center;
+  padding:0 12px; gap:16px;
+  font-size:11px; color:var(--text-dim);
+}
+
+/* ============================================================
+   BIOGRAPHY OYNA MAZMUNI
+   ============================================================ */
+#bio-content {
+  display:flex; flex-direction:column;
+  height:100%;
+}
+
+/* Uz/Eng tugmasi va Download tugmasi joylashgan yuqori panel */
+.bio-toolbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 20px; flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  background:rgba(30,32,44,0.5);
+}
+.lang-btn {
+  padding:6px 18px; border-radius:6px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.15);
+  color:#fff; font-size:13px; font-weight:500;
+  cursor:pointer; transition:background 0.13s;
+}
+.lang-btn:hover { background:rgba(255,255,255,0.15); }
+
+/* Biography asosiy kontent */
+.bio-main {
+  flex:1; overflow-y:auto; padding:28px 32px;
+}
+.bio-main::-webkit-scrollbar       { width:6px; }
+.bio-main::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:4px; }
+
+/* ─── RASM JOYI ─── */
+/* ─────────────────────────────────────────────────────────────
+   BIOGRAPHY RASMINI ULASH UCHUN:
+   "bio-photo.jpg" yoki "bio-photo.png" faylini
+   index.html bilan bir papkaga qo'yish.
+   Tavsiya etiladigan razmer: 600x400 piksel
+   ─────────────────────────────────────────────────────────────*/
+.bio-photo {
+  width:100%; max-height:220px;
+  object-fit:cover; border-radius:10px;
+  margin-bottom:24px;
+  border:1px solid rgba(255,255,255,0.08);
+  /* Rasm yuklanmagunga qadar placeholder */
+  background:rgba(255,255,255,0.04);
+  display:block;
+}
+/* Rasm yo'q bo'lsa ko'rinadigan matn */
+.bio-photo-placeholder {
+  width:100%; height:180px;
+  border-radius:10px; margin-bottom:24px;
+  background:rgba(255,255,255,0.03);
+  border:2px dashed rgba(255,255,255,0.1);
+  display:flex; align-items:center; justify-content:center;
+  color:rgba(255,255,255,0.2); font-size:13px;
+}
+
+/* Ism va unvon */
+.bio-name {
+  font-size:26px; font-weight:600; color:#fff;
+  margin-bottom:4px; line-height:1.2;
+}
+.bio-role {
+  font-size:13px; color:var(--green);
+  font-family:'JetBrains Mono',monospace;
+  margin-bottom:20px; letter-spacing:0.5px;
+}
+
+/* Matn paragraflari */
+.bio-text {
+  font-size:13.5px; color:rgba(255,255,255,0.65);
+  line-height:1.85; margin-bottom:14px;
+}
+
+/* Uz/Eng kontentlari */
+.bio-lang { display:none; }
+.bio-lang.active { display:block; }
+
+/* ============================================================
+   RESUME OYNA MAZMUNI
+   ============================================================ */
+#resume-content {
+  display:flex; flex-direction:column; height:100%;
+}
+
+/* Resume toolbar */
+.resume-toolbar {
+  display:flex; align-items:center; gap:10px;
+  padding:12px 20px; flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  background:rgba(30,32,44,0.5);
+}
+
+/* Download tugmasi */
+/* ─────────────────────────────────────────────────────────────
+   PDF YUKLAB OLISH UCHUN:
+   1. "resume.pdf" faylini index.html bilan bir papkaga qo'yilgan
+   2. Download tugmasi bosilganda avtomatik yuklab oladi
+   ─────────────────────────────────────────────────────────────*/
+.download-btn {
+  padding:6px 18px; border-radius:6px;
+  background:var(--accent);
+  border:none; color:#fff;
+  font-size:13px; font-weight:600;
+  cursor:pointer; transition:background 0.13s;
+  display:flex; align-items:center; gap:7px;
+}
+.download-btn:hover { background:#006cbf; }
+.download-btn svg { width:14px; height:14px; }
+
+/* Resume PDF ko'rsatish joyi */
+.resume-pdf-frame {
+  flex:1; width:100%; border:none;
+  background:#fff;
+}
+
+/* PDF yo'q bo'lsa — ma'lumot joyi
+   ─────────────────────────────────────────────────────────────
+   RESUME MA'LUMOTLARINI KIRITISH UCHUN:
+   Quyidagi #resume-uz va #resume-eng div larini toping
+   va ichini o'zingizning ma'lumotlaringiz bilan to'ldiring
+   ─────────────────────────────────────────────────────────────*/
+.resume-body {
+  flex:1; overflow-y:auto; padding:0;
+  display:flex; flex-direction:column;
+}
+.resume-body::-webkit-scrollbar       { width:6px; }
+.resume-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:4px; }
+
+/* ============================================================
+   POST OYNA STILLARI
+   ============================================================ */
+
+/* Har bir post kartasi */
+.post-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+  transition: border-color 0.2s;
+}
+.post-card:hover { border-color: rgba(255,255,255,0.16); }
+
+/* Post tepasidagi profil va sana */
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.post-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0078d4, #00ff88);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: #fff; font-size: 13px;
+  flex-shrink: 0;
+}
+.post-name {
+  font-size: 13px; font-weight: 600; color: #fff;
+  line-height: 1.2;
+}
+.post-date {
+  font-size: 11px; color: var(--text-dim);
+  line-height: 1.2;
+}
+
+/* Post matni */
+.post-text {
+  font-size: 13.5px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.7;
+  margin-bottom: 12px;
+  user-select: text;
+  white-space: pre-wrap; /* Yangi qatorlar saqlanadi */
+}
+
+/* Post sarlavhasi */
+.post-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 8px;
+  user-select: text;
+}
+
+/* Post rasmi */
+.post-img {
+  width: 100%;
+  height:auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  display: block;
+  margin-top: 8px;
+}
+
+/* Post videosi */
+.post-video {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  display: block;
+  margin-top: 8px;
+  background: #000;
+}
+
+/* Post yo'q bo'lganda */
+.post-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.post-empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+/* ─── PDF FAYL IKONLARI ─── */
+.pdf-file-icon {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+  padding:12px;
+  border-radius:8px;
+  transition:background 0.15s;
+  width:100px;
+}
+.pdf-file-icon:hover { background:rgba(255,255,255,0.08); }
+.pdf-file-icon img {
+  width:64px; height:64px; /* ← PDF ikoni o'lchami */
+  object-fit:contain;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+}
+.pdf-file-icon span {
+  font-size:12px;
+  color:#fff;
+  text-align:center;
+  text-shadow:0 1px 3px rgba(0,0,0,0.8);
+}
+.resume-lang { display:none; }
+.resume-lang.active { display:block; }
+
+/* Resume mazmun stillari */
+.r-header { margin-bottom:24px; text-align:center; }
+.r-fullname { font-size:24px; font-weight:700; color:#fff; margin-bottom:4px; }
+.r-contact  { font-size:12px; color:var(--text-dim); line-height:1.8; }
+.r-contact a { color:var(--accent); text-decoration:none; }
+
+.r-section { margin-bottom:22px; }
+.r-section-title {
+  font-size:11px; color:var(--green);
+  font-family:'JetBrains Mono',monospace;
+  text-transform:uppercase; letter-spacing:2px;
+  padding-bottom:6px; margin-bottom:14px;
+  border-bottom:1px solid rgba(0,255,136,0.2);
+}
+
+/* Skill progress bar */
+.r-skill-row { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+.r-skill-name { font-size:12px; color:var(--text); width:160px; flex-shrink:0; font-family:'JetBrains Mono',monospace; }
+.r-skill-bar  { flex:1; height:4px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
+.r-skill-fill { height:100%; background:linear-gradient(90deg,var(--green),var(--accent)); border-radius:4px; transition:width 0.8s ease; }
+
+/* Tag/badge */
+.r-tag {
+  display:inline-block; padding:3px 10px; border-radius:20px;
+  font-size:10px; font-family:'JetBrains Mono',monospace;
+  background:rgba(0,255,136,0.08); color:var(--green);
+  border:1px solid rgba(0,255,136,0.18); margin:2px;
+}
+
+/* ============================================================
+   ANDROID MOBIL VERSIYASI
+   ============================================================ */
+@media (min-width: 768px) { #android { display:none !important; } }
+@media (max-width: 767px) { #desktop { display:none !important; } #android { display:block !important; } }
+
+#android{
+  width:100vw;height:100vh;position:relative;overflow:hidden;
+  background:linear-gradient(160deg,#0a0e1a 0%,#0d1520 40%,#091018 100%);
+  display:none;
+}
+#a-wallpaper{
+  position:absolute;inset:0;z-index:0;
+  background-image:url('wallpaperweb.jpg');
+  background-size:cover;background-position:center;
+  background-repeat:no-repeat;
+}
+#a-wallpaper::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,0.55) 0%,rgba(0,0,0,0.25) 50%,rgba(0,0,0,0.7) 100%);
+}
+#status-bar{
+  position:absolute;top:0;left:0;right:0;height:24px;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;background:rgba(0,0,0,0.35);
+}
+.sb-left{font-size:11px;font-weight:500;color:#fff;letter-spacing:0.3px;}
+.sb-right{display:flex;align-items:center;gap:5px;}
+.sb-time{font-size:11px;font-weight:700;color:#fff;letter-spacing:0.5px;}
+.signal{display:flex;align-items:flex-end;gap:1px;height:10px;}
+.signal span{width:2px;background:rgba(255,255,255,0.9);border-radius:0.5px;}
+.signal span:nth-child(1){height:3px;}
+.signal span:nth-child(2){height:5px;}
+.signal span:nth-child(3){height:7px;}
+.signal span:nth-child(4){height:9px;}
+.wifi{font-size:11px;color:#fff;}
+.battery{
+  display:flex;align-items:center;gap:1px;width:19px;height:10px;position:relative;
+}
+.bat-body{
+  width:16px;height:10px;border:1px solid rgba(255,255,255,0.8);border-radius:1px;
+  position:relative;overflow:hidden;
+}
+.bat-fill{position:absolute;left:0;top:0;bottom:0;width:85%;background:#4caf50;border-radius:0.5px;}
+.bat-tip{width:2px;height:5px;background:rgba(255,255,255,0.7);border-radius:0 1px 1px 0;align-self:center;}
+.bat-bolt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:7px;color:#fff;z-index:1;}
+
+#weather-widget{
+  position:absolute;top:30px;left:0;right:0;z-index:50;
+  display:flex;flex-direction:column;align-items:center;padding:10px 0 6px;
+}
+.ww-temp{font-size:64px;font-weight:200;color:#fff;line-height:1;letter-spacing:-2px;}
+.ww-desc{font-size:14px;color:rgba(255,255,255,0.7);margin-top:2px;font-weight:300;}
+.ww-city{font-size:11px;color:rgba(255,255,255,0.5);margin-top:1px;letter-spacing:0.5px;}
+.ww-row{display:flex;gap:16px;margin-top:8px;}
+.ww-detail{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.ww-dl{font-size:9px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.5px;}
+.ww-dv{font-size:12px;color:rgba(255,255,255,0.8);font-weight:500;}
+
+
+
+#dock{
+  position:fixed;bottom:48px;left:0;right:0;height:64px;z-index:100;
+  display:flex;align-items:center;justify-content:space-around;
+  padding:0 16px 8px;
+}
+.dock-btn{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  cursor:pointer;flex:1;padding:4px 0;border-radius:10px;min-width:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.dock-btn:active{background:rgba(255,255,255,0.1);}
+.dock-btn .dic{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.dock-btn .dic img{width:100%;height:100%;object-fit:contain;}
+.dock-btn .dlbl{font-size:10px;color:rgba(255,255,255,0.6);}
+.dock-btn.menu-btn .dic{
+  width:56px;height:56px;border-radius:12px;
+  overflow:hidden;
+}
+
+#overlay{
+  position:fixed;inset:0;z-index:200;display:none;pointer-events:none;
+}
+#overlay.open{display:block;pointer-events:auto;}
+
+#menu-drawer{
+  position:absolute;left:0;right:0;bottom:0;
+  height:calc(100vh - 24px);
+  background:rgba(10,12,20,0.85);backdrop-filter:blur(28px);
+  border-radius:18px 18px 0 0;
+  padding-bottom:44px;
+  transform:translateY(100%);
+  transition:transform 0.32s cubic-bezier(0.4,0,0.2,1);
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 -8px 40px rgba(0,0,0,0.8);
+}
+#menu-drawer.open{transform:translateY(0);}
+.drawer-handle{
+  width:40px;height:4px;border-radius:2px;
+  background:rgba(255,255,255,0.25);margin:10px auto 0;flex-shrink:0;
+}
+.drawer-search{
+  display:flex;align-items:center;gap:8px;
+  margin:8px 16px 6px;
+  background:rgba(255,255,255,0.06);
+  border:0.5px solid rgba(255,255,255,0.1);border-radius:20px;
+  padding:6px 14px;flex-shrink:0;
+}
+.drawer-search input{
+  background:transparent;border:none;outline:none;
+  color:#fff;font-size:13px;width:100%;font-family:'Roboto',sans-serif;
+}
+.drawer-search svg{width:14px;height:14px;flex-shrink:0;}
+.drawer-search input::placeholder{color:rgba(255,255,255,0.35);}
+.drawer-section{padding:0 8px;margin-bottom:4px;flex-shrink:0;}
+.drawer-section-title{
+  font-size:10px;color:rgba(255,255,255,0.35);
+  text-transform:uppercase;letter-spacing:1.5px;padding:6px 8px 4px;font-weight:500;
+}
+.drawer-apps{flex:1;overflow-y:auto;padding:0 8px 16px;-webkit-overflow-scrolling:touch;}
+.drawer-apps::-webkit-scrollbar{display:none;}
+.drawer-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:4px 0;}
+.drawer-app{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:10px 4px;border-radius:12px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.drawer-app:active{background:rgba(255,255,255,0.1);}
+.drawer-app .da-icon{
+  width:50px;height:50px;border-radius:13px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,0.08);
+}
+.drawer-app .da-icon img{width:100%;height:100%;object-fit:cover;}
+.drawer-app .da-lbl{font-size:11px;color:rgba(255,255,255,0.8);text-align:center;white-space:nowrap;overflow:hidden;max-width:72px;text-overflow:ellipsis;}
+
+.social-row{
+  display:flex;align-items:center;gap:12px;padding:10px 12px;
+  border-radius:12px;cursor:pointer;margin-bottom:2px;
+  -webkit-tap-highlight-color:transparent;
+}
+.social-row:active{background:rgba(255,255,255,0.1);}
+.social-row .sr-icon{
+  width:40px;height:40px;border-radius:10px;overflow:hidden;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,0.08);
+}
+.social-row .sr-icon img{width:100%;height:100%;object-fit:cover;}
+.social-row .sr-name{font-size:13px;font-weight:500;color:#fff;flex:1;}
+.social-row .sr-arrow{font-size:14px;color:rgba(255,255,255,0.3);}
+
+.screen{
+  position:fixed;inset:0;z-index:300;
+  display:none;flex-direction:column;
+  background:rgba(10,12,20,0.82);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  transform:translateX(100%);
+  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.screen.open{transform:translateX(0);}
+.screen-top{
+  display:flex;align-items:center;gap:12px;
+  padding:30px 16px 10px;background:rgba(0,0,0,0.4);flex-shrink:0;
+  border-bottom:0.5px solid rgba(255,255,255,0.06);
+  min-height:64px;
+}
+.back-btn{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,0.08);border:none;
+  color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.back-btn:active{background:rgba(255,255,255,0.16);}
+.screen-title{font-size:17px;font-weight:500;color:#fff;flex:1;}
+.screen-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:52px;}
+.screen-body::-webkit-scrollbar{display:none;}
+
+.bio-photo-wrap{padding:16px;flex-shrink:0;}
+.bio-photo{width:100%;max-height:200px;object-fit:cover;border-radius:14px;display:block;background:rgba(255,255,255,0.04);}
+.bio-content-pad{padding:0 16px 24px;}
+.bio-name-txt{font-size:22px;font-weight:700;color:#fff;margin-bottom:3px;}
+.bio-role-txt{font-size:12px;color:var(--green, #00e676);font-family:'JetBrains Mono',monospace;margin-bottom:16px;letter-spacing:0.5px;}
+.bio-p{font-size:14px;color:rgba(255,255,255,0.65);line-height:1.8;margin-bottom:12px;}
+.bio-block{display:none;}
+.bio-block.active{display:block;}
+.lang-btn-wrap{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:0.5px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.2);position:relative;}
+.lang-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;color:#fff;background:rgba(25,118,210,0.3);border:0.5px solid rgba(25,118,210,0.5);cursor:pointer;}
+.lang-btn img{width:18px;height:12px;border-radius:2px;object-fit:cover;}
+.lang-popup{position:absolute;top:100%;left:16px;z-index:10;background:#1e1e2e;border:0.5px solid rgba(255,255,255,0.12);border-radius:12px;padding:4px;display:none;min-width:170px;box-shadow:0 8px 32px rgba(0,0,0,0.6);}
+.lang-popup.open{display:block;}
+.lang-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.7);}
+.lang-opt:hover{background:rgba(255,255,255,0.08);color:#fff;}
+.lang-opt img{width:18px;height:12px;border-radius:2px;object-fit:cover;}
+
+.resume-list{padding:12px 16px;}
+.resume-item{
+  display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;
+  background:rgba(0,0,0,0.3);border:0.5px solid rgba(255,255,255,0.08);
+  margin-bottom:10px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.resume-item:active{background:rgba(255,255,255,0.1);}
+.resume-item .ri-icon{
+  width:48px;height:48px;border-radius:12px;overflow:hidden;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.resume-item .ri-icon img{width:100%;height:100%;object-fit:cover;}
+.resume-item .ri-info{flex:1;}
+.resume-item .ri-name{font-size:14px;font-weight:500;color:#fff;}
+.resume-item .ri-size{font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px;}
+.resume-item .ri-arrow{font-size:18px;color:rgba(255,255,255,0.3);}
+
+.post-body{padding:12px 16px;}
+.post-card{
+  background:rgba(0,0,0,0.3);border:0.5px solid rgba(255,255,255,0.06);
+  border-radius:14px;padding:14px;margin-bottom:12px;
+}
+.post-hd{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.post-av{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#1976d2,#00e676);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:12px;color:#fff;
+}
+.post-uname{font-size:13px;font-weight:500;color:#fff;}
+.post-date{font-size:11px;color:rgba(255,255,255,0.4);}
+.post-title-txt{font-size:15px;font-weight:600;color:#fff;margin-bottom:6px;}
+.post-text-txt{font-size:13.5px;color:rgba(255,255,255,0.7);line-height:1.75;white-space:pre-wrap;}
+.post-img-el{width:100%;height:auto;border-radius:10px;margin-top:10px;display:block;}
+.post-vid-el{width:100%;border-radius:10px;margin-top:10px;display:block;background:#000;}
+
+.contact-hero{
+  display:flex;flex-direction:column;align-items:center;
+  padding:32px 16px 24px;background:rgba(0,0,0,0.3);
+  border-bottom:0.5px solid rgba(255,255,255,0.06);
+}
+.contact-avatar{
+  width:80px;height:80px;border-radius:50%;
+  border:2px solid rgba(255,255,255,0.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:700;color:#fff;margin-bottom:12px;
+}
+.contact-name{font-size:22px;font-weight:700;color:#fff;}
+.contact-role{font-size:13px;color:var(--green,#00e676);font-family:'JetBrains Mono',monospace;margin-top:4px;text-align:center;}
+.contact-body{padding:16px;}
+.contact-section-title{
+  font-size:11px;color:rgba(255,255,255,0.35);
+  text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;padding-left:4px;
+}
+.contact-row{
+  display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;
+  background:rgba(0,0,0,0.3);border:0.5px solid rgba(255,255,255,0.08);
+  margin-bottom:8px;cursor:pointer;text-decoration:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.contact-row:active{background:rgba(255,255,255,0.1);}
+.contact-row .cr-icon{
+  width:42px;height:42px;border-radius:11px;overflow:hidden;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.contact-row .cr-icon img{width:100%;height:100%;object-fit:cover;}
+.contact-row .cr-info{flex:1;}
+.contact-row .cr-type{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:2px;}
+.contact-row .cr-val{font-size:13px;color:#fff;font-weight:500;}
+
+#confirm-sheet{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,0.65);display:none;align-items:flex-end;justify-content:center;
+  padding-bottom:48px;
+}
+#confirm-sheet.open{display:flex;}
+.cf-box{
+  background:rgba(20,20,35,0.95);border:0.5px solid rgba(255,255,255,0.1);
+  border-radius:20px 20px 0 0;width:100%;padding:20px 20px 32px;
+  animation:slideUp 0.25s ease;
+}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.cf-logo-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.cf-logo-ic{width:48px;height:48px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);}
+.cf-logo-ic img{width:100%;height:100%;object-fit:cover;}
+.cf-pname{font-size:16px;font-weight:600;color:#fff;}
+.cf-purl{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;word-break:break-all;}
+.cf-msg{font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:18px;line-height:1.5;}
+.cf-btns{display:flex;gap:10px;}
+.cf-no{flex:1;padding:12px;border-radius:12px;border:0.5px solid rgba(255,255,255,0.2);background:transparent;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:'Roboto',sans-serif;}
+.cf-yes{flex:2;padding:12px;border-radius:12px;border:none;background:#1976d2;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'Roboto',sans-serif;}
+
+/* 3-tugma navigatsiya paneli */
+#nav-bar{
+  position:fixed;bottom:0;left:0;right:0;height:44px;z-index:10000;
+  display:flex;align-items:center;justify-content:space-around;
+  padding:0 48px;
+  background:rgba(0,0,0,0.35);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.nav-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:transparent;border:none;color:rgba(255,255,255,0.4);
+  font-size:18px;cursor:pointer;display:grid;place-items:center;
+  line-height:1;padding:0;margin:0;
+  -webkit-tap-highlight-color:transparent;transition:color 0.15s;
+}
+.nav-btn:active{color:rgba(255,255,255,0.7);}
+.nav-home{width:40px;height:40px;border:1.5px solid rgba(255,255,255,0.25);font-size:16px;}
+
+
+/* ============================================================ */
+
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     DESKTOP
+     ============================================================ -->
+<div id="desktop">
+
+  <!-- Fon rasmi -->
+  <div id="wallpaper"></div>
+
+  <!-- ── DESKTOP IKONLARI ── -->
+  <div id="desktop-area">
+
+    <!-- BIOGRAPHY IKONI
+         ─────────────────────────────────────────────────────
+         
+         ─────────────────────────────────────────────────────-->
+    <div class="d-icon" ondblclick="openBio()" id="icon-bio">
+      <img src="icons/biography.png" alt="Biography"
+           onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 52 52%22><rect x=%226%22 y=%228%22 width=%2240%22 height=%2227%22 rx=%222%22 fill=%22%231565C0%22/><rect x=%2210%22 y=%2212%22 width=%2232%22 height=%2219%22 rx=%221%22 fill=%22%230D1B2A%22/><rect x=%2220%22 y=%2235%22 width=%2212%22 height=%224%22 rx=%221%22 fill=%22%231565C0%22/><rect x=%2215%22 y=%2239%22 width=%2222%22 height=%223%22 rx=%221%22 fill=%22%230D47A1%22/></svg>'"/>
+      <span>Biography</span>
+    </div>
+
+    <!-- POST IKONI
+        ─────────────────────────────────────────────────────
+        
+        ─────────────────────────────────────────────────────-->
+    <div class="d-icon" ondblclick="openPost()" id="icon-post">
+      <img src="icons/postx.png" alt="Post"
+          onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 52 52%22><rect x=%224%22 y=%224%22 width=%2244%22 height=%2244%22 rx=%224%22 fill=%22%231DA1F2%22/><rect x=%2212%22 y=%2216%22 width=%2228%22 height=%223%22 rx=%221.5%22 fill=%22white%22/><rect x=%2212%22 y=%2224%22 width=%2220%22 height=%223%22 rx=%221.5%22 fill=%22white%22/><rect x=%2212%22 y=%2232%22 width=%2224%22 height=%223%22 rx=%221.5%22 fill=%22white%22/></svg>'"/>
+      <span>Post</span>
+    </div>
+
+    <!-- RESUME IKONI
+         ─────────────────────────────────────────────────────
+         
+         ─────────────────────────────────────────────────────-->
+    <div class="d-icon" ondblclick="openResume()" id="icon-resume">
+      <img src="icons/resume.png" alt="Resume"
+           onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 52 52%22><path d=%22M4 16c0-3 2-5 5-5h10l5 5H44c3 0 5 2 5 5v20c0 3-2 5-5 5H9c-3 0-5-2-5-5z%22 fill=%22%23FF9800%22/><path d=%22M4 16c0-3 2-5 5-5h10l5 5H4z%22 fill=%22%23F57C00%22/></svg>'"/>
+      <span>Resume</span>
+    </div>
+
+  </div><!-- /desktop-area -->
+
+  <!-- ============================================================
+       TASKBAR
+       ============================================================ -->
+  <div id="taskbar">
+
+    <!-- CHAP: Ob-havo -->
+    <!-- CHAP: Ob-havo — ustiga kelganda batafsil oyna chiqadi -->
+<div id="tb-left">
+  <span class="tb-weather-icon" id="w-icon">🌤</span>
+  <div class="tb-weather-info">
+    <span class="tb-weather-temp" id="w-temp">--°</span>
+    <span class="tb-weather-desc" id="w-desc">Toshkent</span>
+  </div>
+
+  <!-- Hover oynasi — batafsil ob-havo ma'lumotlari -->
+  <div id="weather-popup">
+
+    <!-- Yuqori qism: katta harorat + icon -->
+    <div class="wp-header">
+      <div>
+        <div class="wp-temp-big" id="wp-temp-big">--°</div>
+        <div class="wp-condition" id="wp-condition" data-code="">Yuklanmoqda...</div>
+        <div class="wp-city">📍 Toshkent, O'zbekiston</div>
+      </div>
+      <div class="wp-icon-big" id="wp-icon-big">🌤</div>
+    </div>
+
+    <!-- Ma'lumot qatorlari -->
+          <div class="wp-row">
+            <span class="wp-label">🌡 <span id="wp-fl-label">His qilinadigan</span></span>
+            <span class="wp-value" id="wp-feels">--°C</span>
+          </div>
+          <div class="wp-row">
+            <span class="wp-label">💧 <span id="wp-hu-label">Namlik</span></span>
+            <span class="wp-value" id="wp-humidity">--%</span>
+          </div>
+          <div class="wp-row">
+            <span class="wp-label">💨 <span id="wp-wi-label">Shamol</span></span>
+            <span class="wp-value" id="wp-wind">-- km/h</span>
+          </div>
+          <div class="wp-row">
+            <span class="wp-label">🔵 <span id="wp-pr-label">Bosim</span></span>
+            <span class="wp-value" id="wp-pressure">-- hPa</span>
+          </div>
+          <div class="wp-row">
+            <span class="wp-label">👁 <span id="wp-vi-label">Ko'rinish</span></span>
+            <span class="wp-value" id="wp-vis">-- km</span>
+          </div>
+          <div class="wp-row">
+            <span class="wp-label">☀️ <span id="wp-uv-label">UV indeks</span></span>
+            <span class="wp-value" id="wp-uv">--</span>
+          </div>
+
+          <!-- Min / Max harorat -->
+          <div class="wp-minmax">
+            <div>
+              <div class="wp-mm-label min">Minimum</div>
+              <div class="wp-min" id="wp-min">--°C</div>
+            </div>
+            <div>
+              <div class="wp-mm-label max">Maximum</div>
+              <div class="wp-max" id="wp-max">--°C</div>
+            </div>
+          </div>
+
+        </div><!-- /weather-popup -->
+      </div>
+
+    <!-- O'RTA: Pusk + Search + Ochiq ilovalar -->
+    <div id="tb-center">
+
+      <!-- WINDOWS PUSK TUGMASI
+           Ustiga bosganda Start menyusi ochiladi -->
+      <button id="start-btn" onclick="toggleStart()" title="Start">
+        <!-- Windows 4 kvadrat logo -->
+        <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0"  y="0"  width="8" height="8" rx="1.2" fill="#f25022"/>
+          <rect x="10" y="0"  width="8" height="8" rx="1.2" fill="#7fba00"/>
+          <rect x="0"  y="10" width="8" height="8" rx="1.2" fill="#00a4ef"/>
+          <rect x="10" y="10" width="8" height="8" rx="1.2" fill="#ffb900"/>
+        </svg>
+      </button>
+
+              <!-- SEARCH BAR — bosilganda input paydo bo'ladi -->
+        <div id="searchbar" style="position:relative;">
+          <svg viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5">
+            <circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l3 3"/>
+          </svg>
+          <!-- Qidiruv maydoni — yozish uchun -->
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Search"
+            autocomplete="off"
+            style="
+              background:transparent;
+              border:none;
+              outline:none;
+              color:#fff;
+              font-size:12px;
+              width:240px;
+              font-family:'Segoe UI',sans-serif;
+            "
+          />
+          <!-- Natijalar ro'yxati -->
+          <div id="search-dropdown"></div>
+        </div>
+
+      <!-- Ochiq ilovalar (oyna ochilganda bu yerga qo'shiladi) -->
+      <div id="tb-open-apps"></div>
+
+    </div><!-- /tb-center -->
+
+    <!-- O'NG: Tizim ikonlari + soat -->
+    <div id="tb-right">
+
+      <!-- TIL TANLASH TUGMASI -->
+      <div id="lang-btn-wrap" style="position:relative; display:flex; align-items:center;">
+        <div id="lang-btn" onclick="toggleLangMenu('full')" style="
+          display:flex; align-items:center; gap:5px; cursor:pointer;
+          padding:4px 10px; border-radius:6px;
+          border:1px solid rgba(255,255,255,0.18);
+          background:rgba(255,255,255,0.06);
+          height:30px;
+          transition:background 0.13s;
+        " onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+          <img src="icons/flag-uz.png" style="width:20px; height:14px; object-fit:cover; border-radius:2px;" alt=""/>
+          <span style="font-size:11px; color:#fff; font-weight:600; white-space:nowrap;">O'zbek</span>
+        </div>
+        <div id="lang-menu" style="display:none; position:absolute; bottom:calc(100% + 8px); right:0; background:rgba(18,20,30,0.98); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:4px; z-index:700; min-width:130px; box-shadow:0 8px 40px rgba(0,0,0,0.6);"></div>
+      </div>
+
+      <!-- Tizim ikonlari guruhi — FAQAT DEKOR -->
+      <div id="tb-sys">
+        <!-- Ko'rsatilmagan ikonlar belgisi -->
+        <span class="sys-icon" title="Tizim ikonlari">∧</span>
+        <!-- Wifi belgisi -->
+        <span class="sys-icon" title="Wi-Fi">📶</span>
+        <!-- Ovoz belgisi -->
+        <span class="sys-icon" title="Ovoz">🔊</span>
+        <!-- Zaryad — yashil, chaqmoq bilan (zaryadda) -->
+        <span class="sys-battery" title="Zaryad: 100% (zaryadda)">
+          <span class="bat-icon">🔋</span>
+          <span class="bat-bolt">⚡</span>
+        </span>
+      </div>
+
+      <!-- REAL SOAT, SANA, TOSHKENT VAQTI -->
+      <div id="tb-clock">
+        <div class="tc-time" id="tc-time">00:00</div>
+        <div class="tc-date" id="tc-date">00.00.0000</div>
+        <div class="tc-loc">Toshkent vaqti</div>
+      </div>
+
+    </div><!-- /tb-right -->
+
+  </div><!-- /taskbar -->
+
+  <!-- ============================================================
+       PUSK MENYUSI — Start bosilganda ochiladi
+       ============================================================ -->
+  <div id="start-menu">
+    <div class="sm-title">Ijtimoiy tarmoqlar</div>
+    <!-- Platforma qatorlari JavaScript orqali yaratiladi -->
+    <div id="sm-items"></div>
+  </div>
+
+  <!-- ============================================================
+       TASDIQLASH OYNASI
+       ============================================================ -->
+  <div id="confirm-overlay">
+    <div id="confirm-box">
+      <div class="cf-head">
+        <div class="cf-logo"><img id="cf-img" src="" alt=""/></div>
+        <div>
+          <div class="cf-pname" id="cf-pname">Telegram</div>
+          <div class="cf-purl"  id="cf-purl">https://...</div>
+        </div>
+      </div>
+      <div class="cf-msg" id="cf-msg"></div>
+      <div class="cf-btns">
+        <button class="cf-no"  id="cf-no" onclick="closeConfirm()">Yo'q</button>
+        <button class="cf-yes" id="cf-yes">Ha, o'tish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       BIOGRAPHY OYNASI
+       ============================================================ -->
+  <div class="win" id="win-bio" style="display:none; width:620px; height:480px;">
+
+    <!-- SARLAVHA PANELI -->
+    <div class="win-titlebar">
+
+      <!-- Tab qatori -->
+      <div class="win-tabs">
+        <div class="win-tab">
+          <img src="icons/biography.png" alt=""
+               onerror="this.style.display='none'"/>
+          Biography.txt
+          <span class="win-tab-close">✕</span>
+        </div>
+        <div class="win-tab-add">+</div>
+          <div class="win-btns">
+            <button class="win-btn" onclick="minWin('bio')">—</button>
+             <button class="win-btn" onclick="maxWin('bio')">□</button>
+             <button class="win-btn close-btn" onclick="closeWin('bio')">✕</button>
+         </div>  
+      </div>
+
+      <!-- Boshqaruv qatori -->
+      <div class="win-controls-bar">
+        <!-- Navigatsiya tugmalari — faqat dekor -->
+        <div class="win-nav-btn">←</div>
+        <div class="win-nav-btn">→</div>
+        <div class="win-nav-btn">↑</div>
+        <div class="win-nav-btn">↺</div>
+
+        <!-- Manzil satri: PENTESTER > CV xondamir > Web_CV > Biography.txt -->
+        <div class="win-address">
+          <span class="path-item">PENTESTER</span>
+          <span class="path-sep">›</span>
+          <span class="path-item">xondamir</span>
+          <span class="path-sep">›</span>
+          <span class="path-item">Web_CV</span>
+          <span class="path-sep">›</span>
+          <span class="path-item current">Biography.txt</span>
+        </div>
+
+        <!-- Qidiruv — faqat dekor -->
+        <div class="win-search">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5">
+            <circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l3 3"/>
+          </svg>
+          Search Biography
+        </div>
+
+        <!-- Oyna boshqaruv tugmalari: _, □, X -->
+        
+      </div>
+    </div><!-- /win-titlebar -->
+
+    <!-- OYNA ICHKI MAZMUNI -->
+    <div class="win-body">
+      <div id="bio-content">
+
+        <!-- Toolbar: til tanlash tugmasi -->
+        <div class="bio-toolbar">
+          <div></div><!-- bo'sh joy -->
+          <div id="bio-lang-wrap" style="position:relative;">
+            <button class="lang-btn" onclick="toggleBioLangMenu()" id="bio-lang-btn" style="display:flex;align-items:center;gap:8px;">
+              <img src="icons/flag-uz.png" style="width:18px;height:12px;object-fit:cover;border-radius:2px;" alt=""/>
+              <span>O'zbek</span>
+            </button>
+            <div id="bio-lang-menu" style="display:none; position:absolute; top:calc(100% + 4px); right:0; background:rgba(18,20,30,0.98); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:3px; z-index:700; min-width:120px; box-shadow:0 8px 32px rgba(0,0,0,0.6);"></div>
+          </div>
+        </div>
+
+        <!-- Asosiy kontent -->
+        <div class="bio-main">
+
+          <!-- RASM JOYI
+               ───────────────────────────────────────────────
+               bio-photo.jpg faylini index.html yonida
+               Tavsiya: 800x400 px, landscape formatda
+               ───────────────────────────────────────────────-->
+          <img src="bio-photo.jpg" class="bio-photo" alt="Xondamir"
+               onerror="this.style.display='none'; document.getElementById('bio-ph').style.display='flex'"/>
+          <div class="bio-photo-placeholder" id="bio-ph" style="display:none">
+            📷 Rasm: bio-photo.jpg faylini papkaga qo'ying
+          </div>
+
+          <!-- O'ZBEK TILI MAZMUNI -->
+          <div class="bio-lang active" id="bio-uz">
+            <div class="bio-name">Xondamir</div>
+            <div class="bio-role">$ Social engineer · Gray hat hacker · Red team</div>
+
+            <!-- ─────────────────────────────────────────────
+                 O'ZBEK TILIDA MAZMUN
+                 ─────────────────────────────────────────────-->
+            <p class="bio-text">
+              Salom. Men uchun kiberxavfsizlik oddiy kasb emas — bu tartibsizlik ichidan haqiqatni
+              izlash jarayoni. Har bir terminal oynasi, har bir satr kod va har bir zaiflik ortida
+              inson tafakkuri, tizimlar mantig'i va nazoratning asl tabiati yashiringan deb hisoblayman.
+            </p>
+            <p class="bio-text">
+              Asosiy yo'nalishim penetration testing va offensive security bo'lsa-da, qiziqishlarim
+              faqat texnologiya bilan cheklanmaydi. Men falsafa, inqiloblar tarixi, adolat tushunchasi
+              va insoniyatning "hayot aslida nima?" degan tugamaydigan savollari ustida ham muntazam
+              izlanaman. Chunki menimcha, haqiqiy xaker faqat tizimlarni emas, dunyoni ham tahlil
+              qila olishi kerak.
+            </p>
+            <p class="bio-text">
+              Tunlar davomida loglar va paketlar orasida o'tirib, ba'zan eng katta savollar ustida
+              bosh qotiraman: erkinlik nima, haqiqat qayerda boshlanadi, insonni inson qiladigan
+              narsa nima? Kiber olamdagi kurash ham ko'pincha shu savollarning boshqa shaklidir.
+            </p>
+            <p class="bio-text">
+              Men mukammallikka emas, rivojlanishga intilaman. Har bir xato — yangi bilim, har bir
+              muvaffaqiyatsizlik esa keyingi bosqich uchun xarita. Bu yo'lni tanlaganimga
+              afsuslanmaganman. Va ehtimol, umr bo'yi ham shu qorong'i, ammo cheksiz qiziq olamni
+              o'rganishda davom etarman.
+            </p>
+
+          </div>
+
+          <!-- INGLIZ TILI MAZMUNI -->
+          <div class="bio-lang" id="bio-eng">
+            <div class="bio-name">Xondamir</div>
+            <div class="bio-role">$ Social engineer · Gray hat hacker · Red team</div>
+
+            <p class="bio-text">
+              Hello. To me, cybersecurity is far more than a profession—it is the pursuit of truth
+              within chaos. I believe that behind every terminal window, every line of code, and
+              every vulnerability lies a reflection of human thought, the logic of systems, and
+              the true nature of control.
+            </p>
+            <p class="bio-text">
+              Although my primary focus is penetration testing and offensive security, my interests
+              extend far beyond technology alone. I am equally drawn to philosophy, the history of
+              revolutions, the concept of justice, and humanity's endless search for answers to the
+              question: "What is life, really?" Because in my view, a true hacker should be capable
+              of analyzing not only systems, but the world itself.
+            </p>
+            <p class="bio-text">
+              Through countless nights spent among logs and network packets, I often find myself
+              contemplating questions far greater than technology: What is freedom? Where does truth
+              begin? What is it that makes a human being truly human? In many ways, the struggles of
+              the cyber world are merely another expression of these same timeless questions.
+            </p>
+            <p class="bio-text">
+              I do not strive for perfection—I strive for growth. Every mistake is a lesson waiting
+              to be understood, and every failure is a map leading toward the next stage of the
+              journey. I have never regretted choosing this path. And perhaps I will spend my entire
+              life exploring this dark, yet endlessly fascinating world, forever searching for what
+              lies beneath the surface.
+            </p>
+          </div>
+
+          <!-- NEMIS TILI MAZMUNI -->
+          <div class="bio-lang" id="bio-de">
+            <div class="bio-name">Xondamir</div>
+            <div class="bio-role">$ Social engineer · Gray hat hacker · Red team</div>
+            <p class="bio-text">
+              Hallo. Für mich ist Cybersicherheit weit mehr als nur ein Beruf – sie ist die Suche
+              nach Wahrheit inmitten des Chaos. Ich bin überzeugt, dass sich hinter jedem
+              Terminalfenster, jeder Zeile Code und jeder Schwachstelle menschliches Denken, die
+              Logik von Systemen und das wahre Wesen von Kontrolle verbergen.
+            </p>
+            <p class="bio-text">
+              Obwohl mein Schwerpunkt auf Penetration Testing und Offensive Security liegt, reichen
+              meine Interessen weit über die Technologie hinaus. Ich beschäftige mich ebenso intensiv
+              mit Philosophie, der Geschichte von Revolutionen, dem Begriff der Gerechtigkeit und den
+              endlosen Fragen der Menschheit: "Was ist das Leben in seinem tiefsten Wesen?" Denn ich
+              glaube, dass ein wahrer Hacker nicht nur Systeme analysieren kann, sondern auch die
+              Welt selbst verstehen und hinterfragen muss.
+            </p>
+            <p class="bio-text">
+              In langen Nächten zwischen Logs und Datenpaketen denke ich oft über die größten Fragen
+              überhaupt nach: Was ist Freiheit? Wo beginnt die Wahrheit? Was macht einen Menschen
+              wirklich menschlich? Der Kampf in der digitalen Welt ist oft nichts anderes als eine
+              andere Erscheinungsform derselben zeitlosen Fragen.
+            </p>
+            <p class="bio-text">
+              Ich strebe nicht nach Perfektion, sondern nach Entwicklung. Jeder Fehler ist eine neue
+              Erkenntnis, jede Niederlage eine Karte für den nächsten Abschnitt des Weges. Ich habe
+              es nie bereut, diesen Pfad gewählt zu haben. Und vielleicht werde ich mein ganzes Leben
+              damit verbringen, diese dunkle und zugleich unendlich faszinierende Welt zu erforschen
+              – immer auf der Suche nach dem, was unter der Oberfläche verborgen liegt.
+            </p>
+          </div>
+
+          <!-- FRANSUS TILI MAZMUNI -->
+          <div class="bio-lang" id="bio-fr">
+            <div class="bio-name">Xondamir</div>
+            <div class="bio-role">$ Social engineer · Gray hat hacker · Red team</div>
+            <p class="bio-text">
+              Bonjour. Pour moi, la cybersécurité est bien plus qu'un simple métier : c'est une
+              quête de vérité au cœur du chaos. Je suis convaincu que derrière chaque terminal,
+              chaque ligne de code et chaque vulnérabilité se cachent la pensée humaine, la logique
+              des systèmes et la véritable nature du contrôle.
+            </p>
+            <p class="bio-text">
+              Bien que mon domaine principal soit le penetration testing et l'offensive security,
+              mes centres d'intérêt dépassent largement le cadre de la technologie. Je m'intéresse
+              également à la philosophie, à l'histoire des révolutions, à la notion de justice et
+              aux interrogations infinies de l'humanité autour de cette question intemporelle :
+              "Qu'est-ce que la vie, au fond ?" Car à mes yeux, un véritable hacker ne devrait pas
+              seulement être capable d'analyser des systèmes, mais aussi de comprendre et
+              d'interroger le monde lui-même.
+            </p>
+            <p class="bio-text">
+              Au fil des nuits passées parmi les journaux système et les paquets réseau, je me
+              retrouve souvent à méditer sur les plus grandes questions qui soient : Qu'est-ce que
+              la liberté ? Où commence la vérité ? Qu'est-ce qui fait qu'un être humain est
+              véritablement humain ? Les luttes du cyberespace ne sont, bien souvent, qu'une autre
+              manifestation de ces mêmes interrogations fondamentales.
+            </p>
+            <p class="bio-text">
+              Je ne poursuis pas la perfection ; je poursuis l'évolution. Chaque erreur est une
+              nouvelle leçon, chaque échec une carte indiquant la prochaine étape du voyage. Je
+              n'ai jamais regretté d'avoir choisi cette voie. Et peut-être passerai-je toute ma vie
+              à explorer cet univers sombre, mais infiniment fascinant, poursuivant sans relâche ce
+              qui se cache au-delà des apparences.
+            </p>
+          </div>
+
+          <!-- ISPAN TILI MAZMUNI -->
+          <div class="bio-lang" id="bio-es">
+            <div class="bio-name">Xondamir</div>
+            <div class="bio-role">$ Social engineer · Gray hat hacker · Red team</div>
+            <p class="bio-text">
+              Hola. Para mí, la ciberseguridad es mucho más que una profesión; es la búsqueda de
+              la verdad en medio del caos. Creo que detrás de cada terminal, cada línea de código
+              y cada vulnerabilidad se esconden el pensamiento humano, la lógica de los sistemas y
+              la verdadera naturaleza del control.
+            </p>
+            <p class="bio-text">
+              Aunque mi principal campo de especialización es el penetration testing y la offensive
+              security, mis intereses van mucho más allá de la tecnología. También dedico gran parte
+              de mi tiempo a la filosofía, a la historia de las revoluciones, al concepto de justicia
+              y a las interminables preguntas que la humanidad se ha formulado desde siempre:
+              "¿Qué es realmente la vida?" Porque, en mi opinión, un verdadero hacker no debería
+              limitarse a comprender sistemas; también debería ser capaz de analizar y cuestionar
+              el mundo que los rodea.
+            </p>
+            <p class="bio-text">
+              Durante largas noches entre registros, paquetes y flujos de datos, a menudo me
+              encuentro reflexionando sobre cuestiones mucho más profundas: ¿Qué es la libertad?
+              ¿Dónde comienza la verdad? ¿Qué es aquello que hace humano al ser humano? En muchos
+              sentidos, las luchas del ciberespacio no son más que otra expresión de estas mismas
+              preguntas eternas.
+            </p>
+            <p class="bio-text">
+              No persigo la perfección; persigo el crecimiento. Cada error es una nueva enseñanza,
+              y cada fracaso es un mapa que señala el siguiente paso del camino. Nunca me he
+              arrepentido de haber elegido esta senda. Y quizás pase toda mi vida explorando este
+              mundo oscuro, pero infinitamente fascinante, en una búsqueda constante de aquello que
+              permanece oculto bajo la superficie.
+            </p>
+          </div>
+
+          <!-- ITALIAN TILI MAZMUNI -->
+          <div class="bio-lang" id="bio-it">
+            <div class="bio-name">Xondamir</div>
+            <div class="bio-role">$ Social engineer · Gray hat hacker · Red team</div>
+            <p class="bio-text">
+              Ciao. Per me la cybersicurezza non è semplicemente una professione: è una ricerca
+              della verità nel cuore del caos. Credo che dietro ogni finestra di terminale, ogni
+              riga di codice e ogni vulnerabilità si nascondano il pensiero umano, la logica dei
+              sistemi e la vera natura del controllo.
+            </p>
+            <p class="bio-text">
+              Sebbene il mio campo principale sia il penetration testing e l'offensive security,
+              i miei interessi non si limitano alla tecnologia. Mi dedico con la stessa passione
+              alla filosofia, alla storia delle rivoluzioni, al concetto di giustizia e alle domande
+              senza fine che accompagnano l'umanità da sempre: "Che cos'è davvero la vita?" Perché,
+              a mio avviso, un vero hacker non dovrebbe limitarsi ad analizzare i sistemi; dovrebbe
+              essere in grado di comprendere e interrogare anche il mondo stesso.
+            </p>
+            <p class="bio-text">
+              Nelle lunghe notti trascorse tra log, pacchetti e flussi di dati, mi ritrovo spesso
+              a riflettere sulle domande più grandi di tutte: Che cos'è la libertà? Dove ha inizio
+              la verità? Che cosa rende un essere umano veramente umano? La lotta nel mondo digitale
+              è spesso soltanto un'altra manifestazione di questi stessi interrogativi senza tempo.
+            </p>
+            <p class="bio-text">
+              Non inseguo la perfezione; inseguo la crescita. Ogni errore è una nuova conoscenza,
+              ogni fallimento una mappa che indica la tappa successiva del viaggio. Non mi sono mai
+              pentito di aver scelto questa strada. E forse trascorrerò l'intera vita esplorando
+              questo universo oscuro ma infinitamente affascinante, continuando a cercare ciò che
+              si cela oltre la superficie delle cose.
+            </p>
+          </div>
+        </div><!-- /bio-main -->
+      </div>
+    </div><!-- /win-body -->
+
+    <!-- Pastki status bar -->
+    <div class="win-statusbar">
+      <span>0 items</span>
+      <span>|</span>
+      <span>Biography.txt</span>
+    </div>
+
+  </div><!-- /win-bio -->
+
+  <!-- ============================================================
+       RESUME OYNASI
+       ============================================================ -->
+  <div class="win" id="win-resume" style="display:none; width:620px; height:480px;">
+
+    <!-- SARLAVHA PANELI -->
+    <div class="win-titlebar">
+
+      <!-- Tab qatori -->
+      <div class="win-tabs">
+        <div class="win-tab">
+          <img src="icons/resume.png" alt=""
+               onerror="this.style.display='none'"/>
+          Resume
+          <span class="win-tab-close">✕</span>
+        </div>
+        <div class="win-tab-add">+</div>
+          <div class="win-btns">
+            <button class="win-btn" onclick="minWin('resume')">—</button>
+            <button class="win-btn" onclick="maxWin('resume')">□</button>
+           <button class="win-btn close-btn" onclick="closeWin('resume')">✕</button>
+          </div>
+      </div>
+
+      <!-- Boshqaruv qatori -->
+      <div class="win-controls-bar">
+        <div class="win-nav-btn">←</div>
+        <div class="win-nav-btn">→</div>
+        <div class="win-nav-btn">↑</div>
+        <div class="win-nav-btn">↺</div>
+
+        <!-- Manzil satri -->
+        <div class="win-address">
+          <span class="path-item">PENTESTER</span>
+          <span class="path-sep">›</span>
+          <span class="path-item">xondamir</span>
+          <span class="path-sep">›</span>
+          <span class="path-item">Web_CV</span>
+          <span class="path-sep">›</span>
+          <span class="path-item current">Resume</span>
+        </div>
+
+        <div class="win-search">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5">
+            <circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l3 3"/>
+          </svg>
+          Search Resume
+        </div>
+      </div>
+    </div><!-- /win-titlebar -->
+
+    <!-- OYNA MAZMUNI -->
+    <div class="win-body">
+      <div id="resume-content">
+
+        <!-- Resume mazmuni -->
+         <!-- PDF ko'rsatish — resume.pdf fayli papkada bo'lishi kerak -->
+              <!-- ─────────────────────────────────────────────
+                  2 TA PDF FAYL IKONLARI
+                  ─────────────────────────────────────────────-->
+                    <div id="resume-files" 
+                      style="display:flex; 
+                      flex-direction:row; 
+                      gap:24px; 
+                      justify-content:flex-start; 
+                      align-items:flex-start; 
+                     padding:16px;">
+
+                <!-- O'ZBEK TILIDA PDF -->
+                <div class="pdf-file-icon" onclick="openPdf('resume-uz.pdf')">
+                  <img src="icons/pdf.png" alt="PDF"
+                      onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%228%22 fill=%22%23e74c3c%22/><text x=%2232%22 y=%2242%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22 font-weight=%22bold%22>PDF</text></svg>'"/>
+                  <span>Resume UZ</span>
+                </div>
+
+                <!-- INGLIZ TILIDA PDF -->
+                <div class="pdf-file-icon" onclick="openPdf('resume-eng.pdf')">
+                  <img src="icons/pdf.png" alt="PDF"
+                      onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%228%22 fill=%22%23e74c3c%22/><text x=%2232%22 y=%2242%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22 font-weight=%22bold%22>PDF</text></svg>'"/>
+                  <span>Resume ENG</span>
+                </div>
+
+              </div>
+
+              <!-- PDF KO'RSATISH JOYI — fayl bosilganda shu yerda ochiladi -->
+              <div id="pdf-viewer" style="display:none; flex-direction:column; flex:1;">
+
+                <!-- Orqaga tugmasi -->
+                <div style="
+                  padding:8px 16px;
+                  display:flex;
+                  align-items:center;
+                  gap:10px;
+                  border-bottom:1px solid rgba(255,255,255,0.07);
+                  background:rgba(30,32,44,0.5);
+                ">
+                  <button onclick="closePdf()" style="
+                    padding:5px 14px;
+                    border-radius:6px;
+                    border:1px solid rgba(255,255,255,0.15);
+                    background:rgba(255,255,255,0.08);
+                    color:#fff; font-size:12px;
+                    cursor:pointer;
+                  ">← Orqaga</button>
+                  <span id="pdf-name" style="font-size:12px; color:rgba(255,255,255,0.5);"></span>
+
+                  <!-- Download tugmasi -->
+                  <a id="pdf-download" href="" download style="margin-left:auto;">
+                    <button style="
+                      padding:5px 14px;
+                      border-radius:6px; border:none;
+                      background:#0078d4;
+                      color:#fff; font-size:12px;
+                      font-weight:600; cursor:pointer;
+                    ">⬇ Download</button>
+                  </a>
+                </div>
+
+               <!-- PDF iframe -->
+              <iframe id="pdf-frame"
+                  src="about:blank"
+                  style="flex:1; width:100%; border:none; min-height:400px;"
+                 title="Resume PDF">
+              </iframe>
+
+            </div>
+
+          </div>
+        </div><!-- /resume-body -->
+      </div>
+    </div><!-- /win-body -->
+
+    <div class="win-statusbar">
+      <span>0 items</span><span>|</span><span>Resume</span>
+    </div>
+
+  </div><!-- /win-resume -->
+
+    <!-- ============================================================
+      POST OYNASI
+      ============================================================ -->
+  <div class="win" id="win-post" style="display:none; width:580px; height:500px;">
+
+    <!-- SARLAVHA PANELI -->
+    <div class="win-titlebar">
+      <div class="win-tabs">
+        <div class="win-tab">
+          <img src="icons/postx.png" alt=""
+              onerror="this.style.display='none'"/>
+          Post
+          <span class="win-tab-close">✕</span>
+        </div>
+        <div class="win-tab-add">+</div>
+        <div class="win-btns">
+          <button class="win-btn" onclick="minWin('post')">—</button>
+          <button class="win-btn" onclick="maxWin('post')">□</button>
+          <button class="win-btn close-btn" onclick="closeWin('post')">✕</button>
+        </div>
+      </div>
+      <div class="win-controls-bar">
+        <div class="win-nav-btn">←</div>
+        <div class="win-nav-btn">→</div>
+        <div class="win-nav-btn">↑</div>
+        <div class="win-nav-btn">↺</div>
+        <div class="win-address">
+          <span class="path-item">PENTESTER</span>
+          <span class="path-sep">›</span>
+          <span class="path-item">xondamir</span>
+          <span class="path-sep">›</span>
+          <span class="path-item current">Post</span>
+        </div>
+        <div class="win-search">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5">
+            <circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l3 3"/>
+          </svg>
+          Search Post
+        </div>
+      </div>
+    </div>
+
+    <!-- OYNA ICHKI MAZMUNI -->
+    <div class="win-body" style="padding:20px; display:flex; flex-direction:column; gap:16px;">
+      <div id="post-list">
+        <!-- Postlar JavaScript orqali yuklanadi -->
+        <div style="color:var(--text-dim); font-size:13px; text-align:center; padding:40px 0;">
+          Yuklanmoqda...
+        </div>
+      </div>
+    </div>
+
+    <div class="win-statusbar">
+      <span id="post-count">0 posts</span>
+      <span>|</span>
+      <span>Post</span>
+    </div>
+
+  </div><!-- /win-post -->
+
+</div><!-- /desktop -->
+
+<!-- ============================================================
+     ANDROID MOBIL VERSIYASI
+     ============================================================ -->
+<div id="android">
+  <div id="a-wallpaper"></div>
+
+  <div id="status-bar">
+    <span class="sb-left" id="sb-carrier">T-Mobile</span>
+    <div class="sb-right">
+      <div class="signal"><span></span><span></span><span></span><span></span></div>
+      <span class="wifi">▲</span>
+      <div class="battery">
+        <div class="bat-body"><div class="bat-fill"></div><div class="bat-bolt">⚡</div></div>
+        <div class="bat-tip"></div>
+      </div>
+      <span class="sb-time" id="sb-time">00:00</span>
+    </div>
+  </div>
+
+  <div id="weather-widget">
+    <div class="ww-temp" id="ww-temp">--°</div>
+    <div class="ww-desc" id="ww-desc">Yuklanmoqda...</div>
+    <div class="ww-city">📍 Toshkent, O'zbekiston</div>
+    <div class="ww-row">
+      <div class="ww-detail"><div class="ww-dl">Nam</div><div class="ww-dv" id="ww-hum">--%</div></div>
+      <div class="ww-detail"><div class="ww-dl">Shamol</div><div class="ww-dv" id="ww-wind">--</div></div>
+      <div class="ww-detail"><div class="ww-dl">His</div><div class="ww-dv" id="ww-feel">--°</div></div>
+    </div>
+  </div>
+
+
+  <div id="dock">
+    <div class="dock-btn" onclick="openScreen('contact')">
+      <div class="dic"><img src="icons/gmail.png" onerror="this.parentNode.innerHTML='📧'"></div>
+      <span class="dlbl">Kontakt</span>
+    </div>
+    <div class="dock-btn" onclick="openScreen('bio')">
+      <div class="dic"><img src="icons/biography.png" onerror="this.parentNode.innerHTML='👤'"></div>
+      <span class="dlbl">Bio</span>
+    </div>
+    <div class="dock-btn menu-btn" onclick="openMenuDrawer()">
+      <div class="dic"><img src="icons/menu-a.png" alt="Menu" onerror="this.parentNode.innerHTML='<svg width=24 height=24 viewBox=0 0 24 24 fill=none stroke=white stroke-width=2><circle cx=12 cy=5 r=1.5/><circle cx=12 cy=12 r=1.5/><circle cx=12 cy=19 r=1.5/></svg>'"></div>
+      <span class="dlbl">Menu</span>
+    </div>
+    <div class="dock-btn" onclick="openScreen('resume')">
+      <div class="dic"><img src="icons/resume.png" onerror="this.parentNode.innerHTML='📋'"></div>
+      <span class="dlbl">Resume</span>
+    </div>
+    <div class="dock-btn" onclick="openScreen('post')">
+      <div class="dic"><img src="icons/postx.png" onerror="this.parentNode.innerHTML='📰'"></div>
+      <span class="dlbl">Post</span>
+    </div>
+  </div>
+
+  <div id="overlay" onclick="closeMenuDrawer()">
+    <div id="menu-drawer" onclick="event.stopPropagation()">
+      <div class="drawer-handle"></div>
+      <div class="drawer-search">
+        <svg viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l3 3"/></svg>
+        <input type="text" placeholder="Qidirish..." id="drawer-search-inp" oninput="filterDrawer(this.value)">
+      </div>
+      <div class="drawer-section"><div class="drawer-section-title">Ilovalar</div><div class="drawer-grid" id="drawer-apps"></div></div>
+      <div class="drawer-section"><div class="drawer-section-title">Ijtimoiy tarmoqlar</div></div>
+      <div class="drawer-apps" id="drawer-social"></div>
+    </div>
+  </div>
+
+  <!-- Nav bar 3 tugma -->
+  <div id="nav-bar">
+    <button class="nav-btn" aria-label="Recent apps">▢</button>
+    <button class="nav-btn nav-home" onclick="navHome()" aria-label="Home">○</button>
+    <button class="nav-btn" onclick="navBack()" aria-label="Back">◁</button>
+  </div>
+
+  <!-- SCREENS -->
+  <div class="screen" id="screen-bio">
+    <div class="screen-top">
+      <button class="back-btn" onclick="closeScreen('bio')">←</button>
+      <span class="screen-title">Biography</span>
+    </div>
+    <div class="lang-btn-wrap">
+      <div class="lang-btn" id="m-lang-btn" onclick="toggleLangPopup()">
+        <img src="icons/flag-uz.png" id="m-lang-flag"> <span id="m-lang-name">O'zbek</span> <span style="font-size:10px;opacity:0.6;margin-left:2px;">▾</span>
+      </div>
+      <div class="lang-popup" id="m-lang-popup">
+        <div class="lang-opt" data-code="uz" onclick="setLangM('uz')"><img src="icons/flag-uz.png"> O'zbek</div>
+        <div class="lang-opt" data-code="eng" onclick="setLangM('eng')"><img src="icons/flag-eng.png"> English</div>
+        <div class="lang-opt" data-code="de" onclick="setLangM('de')"><img src="icons/flag-de.png"> Deutsch</div>
+        <div class="lang-opt" data-code="fr" onclick="setLangM('fr')"><img src="icons/flag-fr.png"> Français</div>
+        <div class="lang-opt" data-code="es" onclick="setLangM('es')"><img src="icons/flag-es.png"> Español</div>
+        <div class="lang-opt" data-code="it" onclick="setLangM('it')"><img src="icons/flag-it.png"> Italiano</div>
+      </div>
+    </div>
+    <div class="screen-body">
+      <div class="bio-photo-wrap"><img src="bio-photo.jpg" class="bio-photo" alt="Xondamir" onerror="this.style.display='none'"></div>
+      <div class="bio-content-pad">
+        <div class="bio-block active" id="m-bio-uz">
+          <div class="bio-name-txt">Xondamir</div>
+          <div class="bio-role-txt">$ Social engineer · Gray hat hacker · Red team</div>
+          <p class="bio-p">Salom. Men uchun kiberxavfsizlik oddiy kasb emas — bu tartibsizlik ichidan haqiqatni izlash jarayoni. Har bir terminal oynasi, har bir satr kod va har bir zaiflik ortida inson tafakkuri, tizimlar mantig'i va nazoratning asl tabiati yashiringan deb hisoblayman.</p>
+          <p class="bio-p">Asosiy yo'nalishim penetration testing va offensive security bo'lsa-da, qiziqishlarim faqat texnologiya bilan cheklanmaydi. Men falsafa, inqiloblar tarixi, adolat tushunchasi va insoniyatning "hayot aslida nima?" degan tugamaydigan savollari ustida ham muntazam izlanaman. Chunki menimcha, haqiqiy xaker faqat tizimlarni emas, dunyoni ham tahlil qila olishi kerak.</p>
+          <p class="bio-p">Tunlar davomida loglar va paketlar orasida o'tirib, ba'zan eng katta savollar ustida bosh qotiraman: erkinlik nima, haqiqat qayerda boshlanadi, insonni inson qiladigan narsa nima? Kiber olamdagi kurash ham ko'pincha shu savollarning boshqa shaklidir.</p>
+          <p class="bio-p">Men mukammallikka emas, rivojlanishga intilaman. Har bir xato — yangi bilim, har bir muvaffaqiyatsizlik esa keyingi bosqich uchun xarita. Bu yo'lni tanlaganimga afsuslanmaganman. Va ehtimol, umr bo'yi ham shu qorong'i, ammo cheksiz qiziq olamni o'rganishda davom etarman.</p>
+        </div>
+        <div class="bio-block" id="m-bio-eng">
+          <div class="bio-name-txt">Xondamir</div>
+          <div class="bio-role-txt">$ Social engineer · Gray hat hacker · Red team</div>
+          <p class="bio-p">Hello. To me, cybersecurity is far more than a profession—it is the pursuit of truth within chaos. I believe that behind every terminal window, every line of code, and every vulnerability lies a reflection of human thought, the logic of systems, and the true nature of control.</p>
+          <p class="bio-p">Although my primary focus is penetration testing and offensive security, my interests extend far beyond technology alone. I am equally drawn to philosophy, the history of revolutions, the concept of justice, and humanity's endless search for answers to the question: "What is life, really?" Because in my view, a true hacker should be capable of analyzing not only systems, but the world itself.</p>
+          <p class="bio-p">Through countless nights spent among logs and network packets, I often find myself contemplating questions far greater than technology: What is freedom? Where does truth begin? What is it that makes a human being truly human? In many ways, the struggles of the cyber world are merely another expression of these same timeless questions.</p>
+          <p class="bio-p">I do not strive for perfection—I strive for growth. Every mistake is a lesson waiting to be understood, and every failure is a map leading toward the next stage of the journey. I have never regretted choosing this path. And perhaps I will spend my entire life exploring this dark, yet endlessly fascinating world, forever searching for what lies beneath the surface.</p>
+        </div>
+        <div class="bio-block" id="m-bio-de">
+          <div class="bio-name-txt">Xondamir</div>
+          <div class="bio-role-txt">$ Social engineer · Gray hat hacker · Red team</div>
+          <p class="bio-p">Hallo. Für mich ist Cybersicherheit weit mehr als nur ein Beruf – sie ist die Suche nach Wahrheit inmitten des Chaos. Ich bin überzeugt, dass sich hinter jedem Terminalfenster, jeder Zeile Code und jeder Schwachstelle menschliches Denken, die Logik von Systemen und das wahre Wesen von Kontrolle verbergen.</p>
+          <p class="bio-p">Obwohl mein Schwerpunkt auf Penetration Testing und Offensive Security liegt, reichen meine Interessen weit über die Technologie hinaus. Ich beschäftige mich ebenso intensiv mit Philosophie, der Geschichte von Revolutionen, dem Begriff der Gerechtigkeit und den endlosen Fragen der Menschheit: "Was ist das Leben in seinem tiefsten Wesen?" Denn ich glaube, dass ein wahrer Hacker nicht nur Systeme analysieren kann, sondern auch die Welt selbst verstehen und hinterfragen muss.</p>
+          <p class="bio-p">In langen Nächten zwischen Logs und Datenpaketen denke ich oft über die größten Fragen überhaupt nach: Was ist Freiheit? Wo beginnt die Wahrheit? Was macht einen Menschen wirklich menschlich? Der Kampf in der digitalen Welt ist oft nichts anderes als eine andere Erscheinungsform derselben zeitlosen Fragen.</p>
+          <p class="bio-p">Ich strebe nicht nach Perfektion, sondern nach Entwicklung. Jeder Fehler ist eine neue Erkenntnis, jede Niederlage eine Karte für den nächsten Abschnitt des Weges. Ich habe es nie bereut, diesen Pfad gewählt zu haben. Und vielleicht werde ich mein ganzes Leben damit verbringen, diese dunkle und zugleich unendlich faszinierende Welt zu erforschen – immer auf der Suche nach dem, was unter der Oberfläche verborgen liegt.</p>
+        </div>
+        <div class="bio-block" id="m-bio-fr">
+          <div class="bio-name-txt">Xondamir</div>
+          <div class="bio-role-txt">$ Social engineer · Gray hat hacker · Red team</div>
+          <p class="bio-p">Bonjour. Pour moi, la cybersécurité est bien plus qu'un simple métier : c'est une quête de vérité au cœur du chaos. Je suis convaincu que derrière chaque terminal, chaque ligne de code et chaque vulnérabilité se cachent la pensée humaine, la logique des systèmes et la véritable nature du contrôle.</p>
+          <p class="bio-p">Bien que mon domaine principal soit le penetration testing et l'offensive security, mes centres d'intérêt dépassent largement le cadre de la technologie. Je m'intéresse également à la philosophie, à l'histoire des révolutions, à la notion de justice et aux interrogations infinies de l'humanité autour de cette question intemporelle : "Qu'est-ce que la vie, au fond ?" Car à mes yeux, un véritable hacker ne devrait pas seulement être capable d'analyser des systèmes, mais aussi de comprendre et d'interroger le monde lui-même.</p>
+          <p class="bio-p">Au fil des nuits passées parmi les journaux système et les paquets réseau, je me retrouve souvent à méditer sur les plus grandes questions qui soient : Qu'est-ce que la liberté ? Où commence la vérité ? Qu'est-ce qui fait qu'un être humain est véritablement humain ? Les luttes du cyberespace ne sont, bien souvent, qu'une autre manifestation de ces mêmes interrogations fondamentales.</p>
+          <p class="bio-p">Je ne poursuis pas la perfection ; je poursuis l'évolution. Chaque erreur est une nouvelle leçon, chaque échec une carte indiquant la prochaine étape du voyage. Je n'ai jamais regretté d'avoir choisi cette voie. Et peut-être passerai-je toute ma vie à explorer cet univers sombre, mais infiniment fascinant, poursuivant sans relâche ce qui se cache au-delà des apparences.</p>
+        </div>
+        <div class="bio-block" id="m-bio-es">
+          <div class="bio-name-txt">Xondamir</div>
+          <div class="bio-role-txt">$ Social engineer · Gray hat hacker · Red team</div>
+          <p class="bio-p">Hola. Para mí, la ciberseguridad es mucho más que una profesión; es la búsqueda de la verdad en medio del caos. Creo que detrás de cada terminal, cada línea de código y cada vulnerabilidad se esconden el pensamiento humano, la lógica de los sistemas y la verdadera naturaleza del control.</p>
+          <p class="bio-p">Aunque mi principal campo de especialización es el penetration testing y la offensive security, mis intereses van mucho más allá de la tecnología. También dedico gran parte de mi tiempo a la filosofía, a la historia de las revoluciones, al concepto de justicia y a las interminables preguntas que la humanidad se ha formulado desde siempre: "¿Qué es realmente la vida?" Porque, en mi opinión, un verdadero hacker no debería limitarse a comprender sistemas; también debería ser capaz de analizar y cuestionar el mundo que los rodea.</p>
+          <p class="bio-p">Durante largas noches entre registros, paquetes y flujos de datos, a menudo me encuentro reflexionando sobre cuestiones mucho más profundas: ¿Qué es la libertad? ¿Dónde comienza la verdad? ¿Qué es aquello que hace humano al ser humano? En muchos sentidos, las luchas del ciberespacio no son más que otra expresión de estas mismas preguntas eternas.</p>
+          <p class="bio-p">No persigo la perfección; persigo el crecimiento. Cada error es una nueva enseñanza, y cada fracaso es un mapa que señala el siguiente paso del camino. Nunca me he arrepentido de haber elegido esta senda. Y quizás pase toda mi vida explorando este mundo oscuro, pero infinitamente fascinante, en una búsqueda constante de aquello que permanece oculto bajo la superficie.</p>
+        </div>
+        <div class="bio-block" id="m-bio-it">
+          <div class="bio-name-txt">Xondamir</div>
+          <div class="bio-role-txt">$ Social engineer · Gray hat hacker · Red team</div>
+          <p class="bio-p">Ciao. Per me la cybersicurezza non è semplicemente una professione: è una ricerca della verità nel cuore del caos. Credo che dietro ogni finestra di terminale, ogni riga di codice e ogni vulnerabilità si nascondano il pensiero umano, la logica dei sistemi e la vera natura del controllo.</p>
+          <p class="bio-p">Sebbene il mio campo principale sia il penetration testing e l'offensive security, i miei interessi non si limitano alla tecnologia. Mi dedico con la stessa passione alla filosofia, alla storia delle rivoluzioni, al concetto di giustizia e alle domande senza fine che accompagnano l'umanità da sempre: "Che cos'è davvero la vita?" Perché, a mio avviso, un vero hacker non dovrebbe limitarsi ad analizzare i sistemi; dovrebbe essere in grado di comprendere e interrogare anche il mondo stesso.</p>
+          <p class="bio-p">Nelle lunghe notti trascorse tra log, pacchetti e flussi di dati, mi ritrovo spesso a riflettere sulle domande più grandi di tutte: Che cos'è la libertà? Dove ha inizio la verità? Che cosa rende un essere umano veramente umano? La lotta nel mondo digitale è spesso soltanto un'altra manifestazione di questi stessi interrogativi senza tempo.</p>
+          <p class="bio-p">Non inseguo la perfezione; inseguo la crescita. Ogni errore è una nuova conoscenza, ogni fallimento una mappa che indica la tappa successiva del viaggio. Non mi sono mai pentito di aver scelto questa strada. E forse trascorrerò l'intera vita esplorando questo universo oscuro ma infinitamente affascinante, continuando a cercare ciò che si cela oltre la superficie delle cose.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-resume">
+    <div class="screen-top">
+      <button class="back-btn" onclick="closeScreen('resume')">←</button>
+      <span class="screen-title">Resume</span>
+    </div>
+    <div class="screen-body">
+      <div class="resume-list">
+        <div class="resume-item" onclick="openPdfM('resume-uz.pdf','Resume UZ')">
+          <div class="ri-icon"><img src="icons/pdf.png" onerror="this.parentNode.innerHTML='PDF'"></div>
+          <div class="ri-info"><div class="ri-name">Resume — O'zbek</div><div class="ri-size">resume-uz.pdf</div></div>
+          <span class="ri-arrow">›</span>
+        </div>
+        <div class="resume-item" onclick="openPdfM('resume-eng.pdf','Resume ENG')">
+          <div class="ri-icon"><img src="icons/pdf.png" onerror="this.parentNode.innerHTML='PDF'"></div>
+          <div class="ri-info"><div class="ri-name">Resume — English</div><div class="ri-size">resume-eng.pdf</div></div>
+          <span class="ri-arrow">›</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-pdf">
+    <div class="screen-top">
+      <button class="back-btn" onclick="closeScreen('pdf')">←</button>
+      <span class="screen-title" id="pdf-screen-title">Resume</span>
+      <a id="pdf-dl-btn" href="" download style="margin-left:auto;"><button style="padding:7px 14px;border-radius:10px;border:none;background:#1976d2;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">⬇ Download</button></a>
+    </div>
+    <div class="screen-body" style="background:#fff;"><iframe id="m-pdf-frame" src="about:blank" style="width:100%;height:100%;border:none;min-height:calc(100vh - 64px);"></iframe></div>
+  </div>
+
+  <div class="screen" id="screen-post">
+    <div class="screen-top">
+      <button class="back-btn" onclick="closeScreen('post')">←</button>
+      <span class="screen-title">Post</span>
+    </div>
+    <div class="screen-body"><div class="post-body" id="post-body"><div style="color:rgba(255,255,255,0.4);text-align:center;padding:60px 20px;font-size:14px;">Yuklanmoqda...</div></div></div>
+  </div>
+
+  <div class="screen" id="screen-contact">
+    <div class="screen-top">
+      <button class="back-btn" onclick="closeScreen('contact')">←</button>
+      <span class="screen-title">Kontakt</span>
+    </div>
+    <div class="screen-body">
+      <div class="contact-hero">
+        <div class="contact-avatar">XQ</div>
+        <div class="contact-name">Xondamir Qarshiboyev</div>
+        <div class="contact-role">$ Gray hat hacker · Red team</div>
+      </div>
+      <div class="contact-body">
+        <div class="contact-section-title">Aloqa</div>
+        <a class="contact-row" href="mailto:xondamir.qarshiboyev404@gmail.com">
+          <div class="cr-icon"><img src="icons/gmail.png" onerror="this.parentNode.innerHTML='📧'"></div>
+          <div class="cr-info"><div class="cr-type">G-Mail</div><div class="cr-val">xondamir.qarshiboyev404@gmail.com</div></div>
+        </a>
+        <a class="contact-row" href="https://t.me/xondamir_000" target="_blank" rel="noopener">
+          <div class="cr-icon"><img src="icons/telegram.png" onerror="this.parentNode.innerHTML='✈️'"></div>
+          <div class="cr-info"><div class="cr-type">Telegram</div><div class="cr-val">@xondamir_000</div></div>
+        </a>
+        <div class="contact-section-title" style="margin-top:16px;">Ijtimoiy tarmoqlar</div>
+        <a class="contact-row" href="https://www.linkedin.com/in/xondamir-qarshiboyev" target="_blank" rel="noopener">
+          <div class="cr-icon"><img src="icons/linkedin.png" onerror="this.parentNode.innerHTML='💼'"></div>
+          <div class="cr-info"><div class="cr-type">LinkedIn</div><div class="cr-val">xondamir-qarshiboyev</div></div>
+        </a>
+        <a class="contact-row" href="https://x.com/xondamir_000" target="_blank" rel="noopener">
+          <div class="cr-icon"><img src="icons/x.png" onerror="this.parentNode.innerHTML='✖️'"></div>
+          <div class="cr-info"><div class="cr-type">X (Twitter)</div><div class="cr-val">@xondamir_000</div></div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirm-sheet" onclick="closeConfirmM()">
+    <div class="cf-box" onclick="event.stopPropagation()">
+      <div class="cf-logo-row">
+        <div class="cf-logo-ic"><img id="cfm-img" src="" alt=""></div>
+        <div><div class="cf-pname" id="cfm-pname"></div><div class="cf-purl" id="cfm-purl"></div></div>
+      </div>
+      <div class="cf-msg" id="cfm-msg">Ushbu saytga o'tishni xohlaysizmi?</div>
+      <div class="cf-btns">
+        <button class="cf-no" onclick="closeConfirmM()">Bekor</button>
+        <button class="cf-yes" id="cfm-yes-btn">Ha, o'tish</button>
+      </div>
+    </div>
+  </div>
+</div><!-- /android -->
+
+
+<!-- ============================================================
+     JAVASCRIPT — BARCHA MANTIQ
+     ============================================================ -->
+<script>
+
+/* ============================================================
+   IJTIMOIY TARMOQLAR — SHU YERDAN O'ZGARTIRING
+   ============================================================ */
+const LINKS = [
+  { name:"Telegram",    url:"https://t.me/xondamir_000",                                                    logo:"icons/telegram.png"   },
+  { name:"LinkedIn",    url:"https://www.linkedin.com/in/xondamir-qarshiboyev",                             logo:"icons/linkedin.png"   },
+  { name:"G-Mail",      url:"mailto:xondamir.qarshiboyev404@gmail.com",                                     logo:"icons/gmail.png"      },
+  { name:"X (Twitter)", url:"https://x.com/xondamir_000",                                                      logo:"icons/x.png"          },
+  { name:"Reddit",      url:"https://www.reddit.com/user/Xondamir404",                                      logo:"icons/reddit.png"     },
+  { name:"TryHackMe",   url:"https://tryhackme.com/p/Xondamir404",                                          logo:"icons/tryhackme.png"  },
+  { name:"HackTheBox",  url:"https://profile.hackthebox.com/profile/019cdc1c-46df-72cd-a476-db0fe7e95b7a",  logo:"icons/hackthebox.png" },
+  { name:"Hacker One",  url:"https://hackerone.com/xondamir404",                                            logo:"icons/hackerone.png"  },
+];
+
+/* ============================================================
+   TIL TIZIMI — LANGUAGES, TRANSLATIONS, SWITCHING
+   ============================================================ */
+const LANGUAGES = [
+  { code:'uz',  name:"O'zbek",    flag: 'icons/flag-uz.png'  },
+  { code:'eng', name:'English',   flag: 'icons/flag-eng.png' },
+  { code:'de',  name:'Deutsch',   flag: 'icons/flag-de.png'  },
+  { code:'fr',  name:'Français',  flag: 'icons/flag-fr.png'  },
+  { code:'es',  name:'Español',   flag: 'icons/flag-es.png'  },
+  { code:'it',  name:'Italiano',  flag: 'icons/flag-it.png'  },
+];
+
+const TRANSLATIONS = {
+  /* ─── Taskbar va UI ─── */
+  search_placeholder: {
+    uz: "Qidirish", eng: "Search", de: "Suche", fr: "Rechercher", es: "Buscar", it: "Cerca"
+  },
+  toshkent: {
+    uz: "Toshkent", eng: "Tashkent", de: "Taschkent", fr: "Tachkent", es: "Taskent", it: "Tashkent"
+  },
+  toshkent_vaqti: {
+    uz: "Toshkent vaqti", eng: "Tashkent time", de: "Taschkent Zeit", fr: "Heure de Tachkent", es: "Hora de Taskent", it: "Ora di Tashkent"
+  },
+  /* ─── Ob-havo ─── */
+  feels_like: {
+    uz: "His qilinadigan", eng: "Feels like", de: "Gefühlt", fr: "Ressenti", es: "Sensación", it: "Percepita"
+  },
+  humidity: {
+    uz: "Namlik", eng: "Humidity", de: "Luftfeuchte", fr: "Humidité", es: "Humedad", it: "Umidità"
+  },
+  wind: {
+    uz: "Shamol", eng: "Wind", de: "Wind", fr: "Vent", es: "Viento", it: "Vento"
+  },
+  pressure: {
+    uz: "Bosim", eng: "Pressure", de: "Druck", fr: "Pression", es: "Presión", it: "Pressione"
+  },
+  visibility: {
+    uz: "Ko'rinish", eng: "Visibility", de: "Sichtweite", fr: "Visibilité", es: "Visibilidad", it: "Visibilità"
+  },
+  uv_index: {
+    uz: "UV indeks", eng: "UV index", de: "UV-Index", fr: "Indice UV", es: "Índice UV", it: "Indice UV"
+  },
+  min: {
+    uz: "Minimum", eng: "Minimum", de: "Minimum", fr: "Minimum", es: "Mínimo", it: "Minimo"
+  },
+  max: {
+    uz: "Maximum", eng: "Maximum", de: "Maximum", fr: "Maximum", es: "Máximo", it: "Massimo"
+  },
+  loading: {
+    uz: "Yuklanmoqda...", eng: "Loading...", de: "Laden...", fr: "Chargement...", es: "Cargando...", it: "Caricamento..."
+  },
+  unknown: {
+    uz: "Noma'lum", eng: "Unknown", de: "Unbekannt", fr: "Inconnu", es: "Desconocido", it: "Sconosciuto"
+  },
+  /* Ob-havo kodlari */
+  weather_clear: {
+    uz: "Ochiq", eng: "Clear", de: "Klar", fr: "Dégagé", es: "Despejado", it: "Sereno"
+  },
+  weather_mostly_clear: {
+    uz: "Asosan ochiq", eng: "Mostly clear", de: "Überwiegend klar", fr: "Plutôt dégagé", es: "Mayormente despejado", it: "Prevalentemente sereno"
+  },
+  weather_partly_cloudy: {
+    uz: "Qisman bulutli", eng: "Partly cloudy", de: "Teilweise bewölkt", fr: "Partiellement nuageux", es: "Parcialmente nublado", it: "Parzialmente nuvoloso"
+  },
+  weather_cloudy: {
+    uz: "Bulutli", eng: "Cloudy", de: "Bewölkt", fr: "Nuageux", es: "Nublado", it: "Nuvoloso"
+  },
+  weather_fog: {
+    uz: "Tuman", eng: "Fog", de: "Nebel", fr: "Brouillard", es: "Niebla", it: "Nebbia"
+  },
+  weather_rain: {
+    uz: "Yomg'ir", eng: "Rain", de: "Regen", fr: "Pluie", es: "Lluvia", it: "Pioggia"
+  },
+  weather_snow: {
+    uz: "Qor", eng: "Snow", de: "Schnee", fr: "Neige", es: "Nieve", it: "Neve"
+  },
+  weather_thunder: {
+    uz: "Momaqaldiroq", eng: "Thunderstorm", de: "Gewitter", fr: "Orage", es: "Tormenta", it: "Temporale"
+  },
+  /* ─── Confirm dialog ─── */
+  confirm_msg: {
+    uz: "{name} sahifasiga o'tmoqchimisiz?",
+    eng: "Open {name} page?",
+    de: "{name}-Seite öffnen?",
+    fr: "Ouvrir la page {name} ?",
+    es: "¿Abrir la página de {name}?",
+    it: "Aprire la pagina di {name}?"
+  },
+  no_btn: {
+    uz: "Yo'q", eng: "No", de: "Nein", fr: "Non", es: "No", it: "No"
+  },
+  yes_btn: {
+    uz: "Ha, o'tish", eng: "Yes, go", de: "Ja, öffnen", fr: "Oui, aller", es: "Sí, ir", it: "Sì, vai"
+  },
+  /* ─── Post ─── */
+  no_posts: {
+    uz: "Hali post yo'q. posts.json ga qo'shing!",
+    eng: "No posts yet. Add to posts.json!",
+    de: "Noch keine Beiträge. Füge sie zu posts.json hinzu!",
+    fr: "Pas encore de posts. Ajoutez à posts.json !",
+    es: "Aún no hay publicaciones. ¡Agrega a posts.json!",
+    it: "Ancora nessun post. Aggiungi a posts.json!"
+  },
+  load_error: {
+    uz: "posts.json fayli topilmadi yoki xato bor",
+    eng: "posts.json not found or has an error",
+    de: "posts.json nicht gefunden oder fehlerhaft",
+    fr: "posts.json introuvable ou erroné",
+    es: "posts.json no encontrado o con error",
+    it: "posts.json non trovato o con errori"
+  },
+  posts_count: {
+    uz: "ta post", eng: "posts", de: "Beiträge", fr: "posts", es: "publicaciones", it: "post"
+  },
+  /* ─── Search ─── */
+  search_empty: {
+    uz: "Hech narsa topilmadi", eng: "Nothing found", de: "Nichts gefunden", fr: "Rien trouvé", es: "Nada encontrado", it: "Niente trovato"
+  },
+  file_type: {
+    uz: "Fayl", eng: "File", de: "Datei", fr: "Fichier", es: "Archivo", it: "File"
+  },
+  social_type: {
+    uz: "Ijtimoiy tarmoq", eng: "Social network", de: "Soziales Netzwerk", fr: "Réseau social", es: "Red social", it: "Social network"
+  },
+  /* ─── Status bar ─── */
+  /* ─── Start menu ─── */
+  social_title: {
+    uz: "Ijtimoiy tarmoqlar", eng: "Social networks", de: "Soziale Netzwerke", fr: "Réseaux sociaux", es: "Redes sociales", it: "Social network"
+  },
+
+};
+
+let currentLang = 'uz';
+
+function getLang() { return currentLang; }
+
+function t(key) {
+  const lang = TRANSLATIONS[key];
+  if (!lang) return '';
+  return lang[currentLang] || lang['eng'] || '';
+}
+
+function tMsg(key, name) {
+  return t(key).replace('{name}', name);
+}
+
+function setLanguage(code) {
+  currentLang = code;
+  document.documentElement.lang = code;
+  
+  /* Update taskbar language button */
+  const btn = document.getElementById('lang-btn');
+  if (btn) {
+    const lang = LANGUAGES.find(l => l.code === code);
+    btn.innerHTML = lang
+      ? '<img src="' + lang.flag + '" style="width:20px;height:14px;object-fit:cover;border-radius:2px;" alt=""/> <span style="font-size:11px;color:#fff;font-weight:600;white-space:nowrap;">' + lang.name + '</span>'
+      : code.toUpperCase();
+  }
+
+  /* Update search placeholder */
+  const inp = document.getElementById('search-input');
+  if (inp) inp.placeholder = t('search_placeholder');
+
+  /* Update clock location label */
+  const loc = document.getElementById('tc-loc');
+  if (loc) loc.textContent = t('toshkent_vaqti');
+
+  /* Update weather location */
+  const wdesc = document.getElementById('w-desc');
+  if (wdesc) wdesc.textContent = t('toshkent');
+
+  /* Update weather popup labels */
+  const wpCity = document.querySelector('.wp-city');
+  if (wpCity) wpCity.textContent = '📍 ' + t('toshkent') + ", O'zbekiston";
+  const wpLabels = [
+    { id:'wp-fl-label', key:'feels_like' },
+    { id:'wp-hu-label', key:'humidity' },
+    { id:'wp-wi-label', key:'wind' },
+    { id:'wp-pr-label', key:'pressure' },
+    { id:'wp-vi-label', key:'visibility' },
+    { id:'wp-uv-label', key:'uv_index' },
+  ];
+  wpLabels.forEach(({id,key}) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t(key);
+  });
+  document.querySelector('.wp-mm-label.min') && (document.querySelector('.wp-mm-label.min').textContent = t('min'));
+  document.querySelector('.wp-mm-label.max') && (document.querySelector('.wp-mm-label.max').textContent = t('max'));
+
+  /* Update weather condition descriptions */
+  const wDesc = document.getElementById('w-desc');
+  if (wDesc && wDesc.dataset.code) {
+    wDesc.textContent = getWeatherDesc(parseInt(wDesc.dataset.code));
+  }
+  const wCondition = document.getElementById('wp-condition');
+  if (wCondition && wCondition.dataset.code) {
+    const code = parseInt(wCondition.dataset.code);
+    const desc = getWeatherDesc(code);
+    wCondition.textContent = desc;
+  }
+
+  /* Update confirm dialog */
+  document.getElementById('cf-msg').textContent = tMsg('confirm_msg', document.getElementById('cf-pname').textContent);
+  document.querySelector('.cf-no').textContent = t('no_btn');
+  document.getElementById('cf-yes').textContent = t('yes_btn');
+
+  /* Update start menu title */
+  const smTitle = document.querySelector('.sm-title');
+  if (smTitle) smTitle.textContent = t('social_title');
+
+  /* Sync bio button and content when changed from taskbar */
+  const bioLangBtn = document.getElementById('bio-lang-btn');
+  if (bioLangBtn) {
+    const lang = LANGUAGES.find(l => l.code === code);
+    bioLangBtn.innerHTML = lang
+      ? flagImg(lang.flag) + ' <span>' + lang.name + '</span>'
+      : code.toUpperCase();
+  }
+  setBioLanguage(code);
+
+  /* Close language dropdown if open */
+  closeLangMenu();
+  
+  /* Save preference */
+  try { localStorage.setItem('lang', code); } catch(e) {}
+}
+
+function getWeatherDesc(code) {
+  const map = {
+    0:'weather_clear', 1:'weather_mostly_clear', 2:'weather_partly_cloudy',
+    3:'weather_cloudy', 45:'weather_fog', 48:'weather_fog',
+    51:'weather_rain', 53:'weather_rain', 55:'weather_rain',
+    61:'weather_rain', 63:'weather_rain', 65:'weather_rain',
+    71:'weather_snow', 73:'weather_snow', 75:'weather_snow',
+    80:'weather_rain', 81:'weather_rain', 82:'weather_rain',
+    95:'weather_thunder', 96:'weather_thunder', 99:'weather_thunder'
+  };
+  const key = map[code] || map[Math.floor(code/10)*10] || '';
+  return key ? t(key) : t('unknown');
+}
+
+/* ============================================================
+   TIL DROPDOWNLAR
+   ============================================================ */
+
+/* ─── Taskbar language dropdown ─── */
+let langOpen = false;
+function toggleLangMenu() {
+  langOpen = !langOpen;
+  const menu = document.getElementById('lang-menu');
+  if (menu) menu.classList.toggle('open', langOpen);
+}
+function closeLangMenu() {
+  langOpen = false;
+  const menu = document.getElementById('lang-menu');
+  if (menu) menu.classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#lang-btn-wrap') && !e.target.closest('#lang-menu') && !e.target.closest('#bio-lang-wrap') && !e.target.closest('#bio-lang-menu')) {
+    const menu = document.getElementById('lang-menu');
+    if (menu && menu.classList.contains('open')) closeLangMenu();
+    const bmenu = document.getElementById('bio-lang-menu');
+    if (bmenu && bmenu.classList.contains('open')) closeBioLangMenu();
+  }
+});
+
+/* ─── Biography language switch — only changes bio content ─── */
+function setBioLanguage(code) {
+  document.querySelectorAll('.bio-lang').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById('bio-' + code);
+  if (target) target.classList.add('active');
+  else {
+    const eng = document.getElementById('bio-eng');
+    if (eng) eng.classList.add('active');
+  }
+  /* Update bio button flag+name */
+  const bioBtn = document.getElementById('bio-lang-btn');
+  if (bioBtn) {
+    const lang = LANGUAGES.find(l => l.code === code);
+    bioBtn.innerHTML = lang
+      ? '<img src="' + lang.flag + '" style="width:18px;height:12px;object-fit:cover;border-radius:2px;" alt=""/> <span>' + lang.name + '</span>'
+      : code.toUpperCase();
+  }
+  closeBioLangMenu();
+}
+
+/* ─── Biography language dropdown ─── */
+let bioLangOpen = false;
+function toggleBioLangMenu() {
+  bioLangOpen = !bioLangOpen;
+  const menu = document.getElementById('bio-lang-menu');
+  if (menu) menu.classList.toggle('open', bioLangOpen);
+}
+function closeBioLangMenu() {
+  bioLangOpen = false;
+  const menu = document.getElementById('bio-lang-menu');
+  if (menu) menu.classList.remove('open');
+}
+
+function flagImg(src) {
+  return '<img src="' + src + '" style="width:18px;height:12px;object-fit:cover;border-radius:2px;" alt=""/>';
+}
+
+/* Build taskbar language menu */
+(function() {
+  const menu = document.getElementById('lang-menu');
+  if (!menu) return;
+  LANGUAGES.forEach(l => {
+    const item = document.createElement('div');
+    item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;cursor:pointer;transition:background 0.13s;font-size:12px;color:#fff;';
+    item.innerHTML = flagImg(l.flag) + '<span>' + l.name + '</span>';
+    item.onmouseenter = () => item.style.background = 'rgba(255,255,255,0.10)';
+    item.onmouseleave = () => item.style.background = 'transparent';
+    item.onclick = (e) => { e.stopPropagation(); setLanguage(l.code); };
+    menu.appendChild(item);
+  });
+})();
+
+/* Build biography language menu */
+(function() {
+  const menu = document.getElementById('bio-lang-menu');
+  if (!menu) return;
+  LANGUAGES.forEach(l => {
+    const item = document.createElement('div');
+    item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:5px;cursor:pointer;transition:background 0.13s;font-size:11px;color:#fff;';
+    item.innerHTML = flagImg(l.flag) + '<span>' + l.name + '</span>';
+    item.onmouseenter = () => item.style.background = 'rgba(255,255,255,0.10)';
+    item.onmouseleave = () => item.style.background = 'transparent';
+    item.onclick = (e) => { e.stopPropagation(); setBioLanguage(l.code); };
+    menu.appendChild(item);
+  });
+})();
+
+/* ============================================================
+   START MENYUSINI YARATISH
+   ============================================================ */
+const smItems = document.getElementById('sm-items');
+LINKS.forEach(lnk => {
+  const el = document.createElement('div');
+  el.className = 'sm-item';
+  el.innerHTML = `
+    <div class="sm-logo">
+      <img src="${lnk.logo}" alt="${lnk.name}"
+           onerror="this.style.display='none'"/>
+    </div>
+    <span class="sm-name">${lnk.name}</span>`;
+  el.onclick = () => { showConfirm(lnk); };
+  smItems.appendChild(el);
+});
+
+/* Search elementlarini DOMga yuklangandan keyin olish */
+const input    = document.getElementById('search-input');
+const dropdown = document.getElementById('search-dropdown');
+
+if (!input || !dropdown) console.error('Search elementlari topilmadi!');
+
+/* Barcha qidiriluvchi elementlarni birlashtirish */
+function getAllItems() {
+  const items = [
+    { name:'Biography', type: t('file_type'), icon:'icons/biography.png', action:()=>openBio()    },
+    { name:'Resume',    type: t('file_type'), icon:'icons/resume.png',    action:()=>openResume() },
+    { name:'Post',      type: t('file_type'), icon:'icons/postx.png',     action:()=>openPost()   },
+  ];
+  LINKS.forEach(lnk => {
+    items.push({
+      name:   lnk.name,
+      type:   t('social_type'),
+      icon:   lnk.logo,
+      action: () => showConfirm(lnk)
+    });
+  });
+  return items;
+}
+
+/* ============================================================
+   START MENYUSI OCHISH/YOPISH
+   ============================================================ */
+let startOpen = false;
+function toggleStart() {
+  startOpen = !startOpen;
+  document.getElementById('start-menu').classList.toggle('open', startOpen);
+  document.getElementById('start-btn').classList.toggle('active', startOpen);
+}
+function closeStart() {
+  startOpen = false;
+  document.getElementById('start-menu').classList.remove('open');
+  document.getElementById('start-btn').classList.remove('active');
+}
+document.addEventListener('mousedown', e => {
+  if (!e.target.closest('#start-menu') &&
+      !e.target.closest('#start-btn') &&
+      !e.target.closest('#confirm-overlay') &&
+      !e.target.closest('.bio-lang') &&
+      !e.target.closest('#lang-btn-wrap') &&
+      !e.target.closest('#lang-menu') &&
+      !e.target.closest('#bio-lang-wrap')) {
+    closeStart();
+  }
+});
+
+/* ============================================================
+   TASDIQLASH OYNASI
+   ============================================================ */
+let cfTarget = '';
+function showConfirm(lnk) {
+  cfTarget = lnk.url;
+  document.getElementById('cf-img').src           = lnk.logo;
+  document.getElementById('cf-pname').textContent = lnk.name;
+  document.getElementById('cf-purl').textContent  = lnk.url;
+  document.getElementById('cf-msg').textContent   = tMsg('confirm_msg', lnk.name);
+  document.getElementById('cf-no').textContent  = t('no_btn');
+  document.getElementById('cf-yes').textContent = t('yes_btn');
+  document.getElementById('cf-yes').onclick = () => {
+    window.open(cfTarget, '_blank', 'noopener,noreferrer');
+    closeConfirm();
+  };
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  if (startOpen) {
+    document.getElementById('start-menu').classList.add('open');
+  }
+}
+
+/* ============================================================
+   REAL SOAT — har 30 sekundda yangilanadi
+   ============================================================ */
+function updateClock() {
+  const n      = new Date();
+  const h      = String(n.getHours()).padStart(2,'0');
+  const m      = String(n.getMinutes()).padStart(2,'0');
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const day    = String(n.getDate()).padStart(2,'0');
+  const month  = MONTHS[n.getMonth()];
+  const year   = String(n.getFullYear()).slice(2);
+  document.getElementById('tc-time').textContent = h + ':' + m;
+  document.getElementById('tc-date').textContent = day + '-' + month + '-' + year;
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+/* ============================================================
+   OB-HAVO — Toshkent, batafsil ma'lumotlar
+   ============================================================ */
+fetch('https://api.open-meteo.com/v1/forecast?latitude=41.2995&longitude=69.2401&current=temperature_2m,weathercode,apparent_temperature,relative_humidity_2m,wind_speed_10m,pressure_msl,visibility,uv_index&daily=temperature_2m_max,temperature_2m_min&timezone=Asia/Tashkent')
+  .then(r => r.json())
+  .then(d => {
+    const c    = d.current;
+    const temp = Math.round(c.temperature_2m);
+    const code = c.weathercode;
+    const IC   = {0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',51:'🌦',61:'🌧',71:'❄️',80:'🌦',95:'⛈'};
+    const icon = IC[code] || IC[Math.floor(code/10)*10] || '🌤';
+    const desc = getWeatherDesc(code);
+
+    /* Taskbar */
+    document.getElementById('w-icon').textContent = icon;
+    document.getElementById('w-temp').textContent = temp + '°';
+    const wDesc = document.getElementById('w-desc');
+    wDesc.textContent = desc;
+    wDesc.dataset.code = code;
+
+    /* Hover popup */
+    document.getElementById('wp-temp-big').textContent  = temp + '°C';
+    document.getElementById('wp-icon-big').textContent  = icon;
+    const wpCond = document.getElementById('wp-condition');
+    wpCond.textContent = desc;
+    wpCond.dataset.code = code;
+    document.getElementById('wp-feels').textContent     = Math.round(c.apparent_temperature) + '°C';
+    document.getElementById('wp-humidity').textContent  = c.relative_humidity_2m + '%';
+    document.getElementById('wp-wind').textContent      = Math.round(c.wind_speed_10m) + ' km/h';
+    document.getElementById('wp-pressure').textContent  = Math.round(c.pressure_msl) + ' hPa';
+    document.getElementById('wp-vis').textContent       = (c.visibility/1000).toFixed(1) + ' km';
+    document.getElementById('wp-uv').textContent        = c.uv_index ?? '--';
+    if (d.daily) {
+      document.getElementById('wp-min').textContent = Math.round(d.daily.temperature_2m_min[0]) + '°C';
+      document.getElementById('wp-max').textContent = Math.round(d.daily.temperature_2m_max[0]) + '°C';
+    }
+  })
+  .catch(() => {
+    document.getElementById('w-temp').textContent = '--°';
+    document.getElementById('w-desc').textContent = t('toshkent');
+  });
+
+/* HTML maxsus belgilarni escape qilish */
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ============================================================
+   OYNALAR TIZIMI
+   ============================================================ */
+let zTop = 50;
+const winState = {};
+
+function bringToFront(win) {
+  if (zTop > 9000) {
+    document.querySelectorAll('.win').forEach((w, i) => w.style.zIndex = 50 + i);
+    zTop = 50 + document.querySelectorAll('.win').length;
+  }
+  win.style.zIndex = ++zTop;
+}
+
+function showWin(id) {
+  const win = document.getElementById('win-' + id);
+  if (!win) return;
+  win.style.display = 'flex';
+  bringToFront(win);
+  const baseW = parseInt(win.style.width)  || 620;
+  const baseH = parseInt(win.style.height) || 480;
+  const w = Math.min(baseW, window.innerWidth  - 80);
+  const h = Math.min(baseH, window.innerHeight - 120);
+  win.style.width  = w + 'px';
+  win.style.height = h + 'px';
+  win.style.left = Math.max(0, (window.innerWidth  - w) / 2) + 'px';
+  win.style.top  = Math.max(0, (window.innerHeight - h) / 2) + 'px';
+  addAppBtn(id);
+  makeDraggable(win, win.querySelector('.win-controls-bar'));
+  makeDraggable(win, win.querySelector('.win-tabs'));
+  win.addEventListener('mousedown', () => bringToFront(win), true);
+  winState[id] = 'open';
+}
+
+function openBio() {
+  const win = document.getElementById('win-bio');
+  if (winState['bio'] === 'open') {
+    win.style.display = 'flex';
+    bringToFront(win);
+    const btn = document.getElementById('app-btn-bio');
+    if (btn) btn.classList.add('active');
+    return;
+  }
+  showWin('bio');
+}
+
+function openResume() {
+  const win = document.getElementById('win-resume');
+  closePdf();
+  if (winState['resume'] === 'open') {
+    win.style.display = 'flex';
+    bringToFront(win);
+    const btn = document.getElementById('app-btn-resume');
+    if (btn) btn.classList.add('active');
+    return;
+  }
+  showWin('resume');
+}
+
+function closeWin(id) {
+  const win = document.getElementById('win-' + id);
+  if (win) {
+    win.querySelectorAll('video').forEach(v=>v.pause());
+    if (win._dragAC) win._dragAC.abort();
+    win.style.display = 'none';
+  }
+  removeAppBtn(id);
+  winState[id] = 'closed';
+}
+
+function minWin(id) {
+  const win = document.getElementById('win-' + id);
+  if (!win) return;
+  const isMin = win.style.display === 'none';
+  win.style.display = isMin ? 'flex' : 'none';
+  if (!isMin) win.querySelectorAll('video').forEach(v=>v.pause());
+  const btn = document.getElementById('app-btn-' + id);
+  if (btn) btn.classList.toggle('active', isMin);
+}
+
+const origSize = {};
+function maxWin(id) {
+  const win = document.getElementById('win-' + id);
+  if (!win) return;
+  if (!origSize[id]) {
+    origSize[id] = { l:win.style.left, t:win.style.top, w:win.style.width, h:win.style.height };
+    win.style.left = '0'; win.style.top = '0';
+    win.style.width  = '100vw';
+    win.style.height = 'calc(100vh - var(--tb-h))';
+    win.style.borderRadius = '0';
+  } else {
+    Object.assign(win.style, {
+      left:origSize[id].l, top:origSize[id].t,
+      width:origSize[id].w, height:origSize[id].h,
+      borderRadius:'10px'
+    });
+    delete origSize[id];
+  }
+}
+
+/* ============================================================
+   TASKBAR — OCHIQ ILOVALAR TUGMALARI
+   ============================================================ */
+function addAppBtn(id) {
+  if (document.getElementById('app-btn-' + id)) return;
+  const NAMES = { bio:'Biography', resume:'Resume', post:'Post' };
+  const ICONS = { bio:'icons/biography.png', resume:'icons/resume.png', post:'icons/postx.png' };
+  const bar = document.getElementById('tb-open-apps');
+  const btn = document.createElement('div');
+  btn.className = 'tb-app-btn active';
+  btn.id = 'app-btn-' + id;
+  btn.innerHTML = `<img src="${ICONS[id]}" alt="" onerror="this.style.display='none'"/> ${NAMES[id]}`;
+  btn.onclick = () => minWin(id);
+  bar.appendChild(btn);
+}
+function removeAppBtn(id) {
+  const btn = document.getElementById('app-btn-' + id);
+  if (btn) btn.remove();
+}
+
+/* ============================================================
+   DRAG & DROP — oynani siljitish
+   ============================================================ */
+function makeDraggable(el, handle) {
+  let sx, sy, ol, ot, active = false;
+  if (!el._dragAC) el._dragAC = new AbortController();
+  const opts = { signal: el._dragAC.signal };
+  handle.addEventListener('mousedown', e => {
+    if (e.target.closest('.win-btns') || e.target.closest('.win-nav-btn')) return;
+    active = true;
+    sx = e.clientX; sy = e.clientY;
+    ol = el.offsetLeft; ot = el.offsetTop;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!active) return;
+    el.style.left = Math.max(0, Math.min(window.innerWidth  - el.offsetWidth,  ol + e.clientX - sx)) + 'px';
+    el.style.top  = Math.max(0, Math.min(window.innerHeight - el.offsetHeight, ot + e.clientY - sy)) + 'px';
+  }, opts);
+  document.addEventListener('mouseup', () => active = false, opts);
+}
+
+/* ============================================================
+   TIL TUGMASI — Biography (endi umumiy tizim orqali)
+   ============================================================ */
+// Eski toggleBioLang endi setLanguage orqali ishlaydi
+
+/* ============================================================
+   PDF — ochish va yopish
+   ============================================================ */
+function openPdf(filename) {
+  document.getElementById('resume-files').style.display = 'none';
+  document.getElementById('pdf-viewer').style.display   = 'flex';
+  document.getElementById('pdf-frame').src              = filename;
+  document.getElementById('pdf-name').textContent       = filename;
+  document.getElementById('pdf-download').href          = filename;
+  document.getElementById('pdf-download').download      = filename;
+}
+function closePdf() {
+  document.getElementById('pdf-viewer').style.display   = 'none';
+  document.getElementById('resume-files').style.display = 'flex';
+  document.getElementById('pdf-frame').src              = '';
+}
+
+/* ============================================================
+   POST OYNASI — postlar yuklanadi va ko'rsatiladi
+   ============================================================ */
+
+/* Post oynasini ochish */
+function openPost() {
+  const win = document.getElementById('win-post');
+  if (winState['post'] === 'open') {
+    win.style.display = 'flex';
+    bringToFront(win);
+    const btn = document.getElementById('app-btn-post');
+    if (btn) btn.classList.add('active');
+    return;
+  }
+  showWin('post');
+  /* Postlarni yuklash */
+  loadPosts();
+}
+
+/* posts.json fayldan postlarni yuklash */
+function loadPosts() {
+  fetch('posts.json')
+  .then(r => { if (!r.ok) throw new Error('Weather API ' + r.status); return r.json(); })
+    .then(posts => {
+      renderPosts(posts);
+    })
+    .catch(() => {
+      document.getElementById('post-list').innerHTML = `
+        <div class="post-empty">
+          <div class="post-empty-icon">📭</div>
+          ${t('load_error')}
+        </div>`;
+    });
+}
+
+/* Postlarni ekranda ko'rsatish */
+function renderPosts(posts) {
+  const list = document.getElementById('post-list');
+
+  /* Post yo'q bo'lsa */
+  if (!posts || posts.length === 0) {
+    list.innerHTML = `
+      <div class="post-empty">
+        <div class="post-empty-icon">✏️</div>
+        ${t('no_posts')}
+      </div>`;
+    return;
+  }
+
+  /* Postlarni yangi tartibda ko'rsatish (oxirgisi birinchi) */
+  const sorted = [...posts].reverse();
+
+  list.innerHTML = '';
+  sorted.forEach(post => {
+    const card = document.createElement('div');
+    card.className = 'post-card';
+
+    const dateStr = formatPostDate(post.date);
+
+    const header = document.createElement('div');
+    header.className = 'post-header';
+    header.innerHTML = `
+      <div class="post-avatar">XQ</div>
+      <div>
+        <div class="post-name">Xondamir Qarshiboyev</div>
+        <div class="post-date">${escHtml(dateStr)}</div>
+      </div>`;
+    card.appendChild(header);
+
+    if (post.title) {
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'post-title';
+      titleDiv.textContent = post.title;
+      card.appendChild(titleDiv);
+    }
+
+    const textDiv = document.createElement('div');
+    textDiv.className = 'post-text';
+    textDiv.textContent = post.text;
+    card.appendChild(textDiv);
+
+    if (post.video) {
+      const video = document.createElement('video');
+      video.className = 'post-video';
+      video.controls = true;
+      const src = document.createElement('source');
+      src.src = post.video;
+      src.type = 'video/mp4';
+      video.appendChild(src);
+      card.appendChild(video);
+    } else if (post.image) {
+      const img = document.createElement('img');
+      img.className = 'post-img';
+      img.src = post.image;
+      img.alt = 'Post rasmi';
+      img.onerror = function() { this.style.display = 'none'; };
+      card.appendChild(img);
+    }
+
+    list.appendChild(card);
+  });
+
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(!e.isIntersecting)e.target.pause();});},{threshold:0.3});
+  list.querySelectorAll('video').forEach(v=>obs.observe(v));
+
+  /* Post soni */
+  document.getElementById('post-count').textContent = posts.length + ' ' + t('posts_count');
+}
+
+/* Sanani chiroyli formatga o'tkazish */
+function formatPostDate(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr.replace(' ', 'T'));
+    const MONTHS = ['Yan','Feb','Mar','Apr','May','Iyn','Iyl','Avg','Sen','Okt','Noy','Dek'];
+    const day   = d.getDate();
+    const month = MONTHS[d.getMonth()];
+    const year  = d.getFullYear();
+    const h     = String(d.getHours()).padStart(2,'0');
+    const m     = String(d.getMinutes()).padStart(2,'0');
+    return `${day} ${month} ${year}, ${h}:${m}`;
+  } catch(e) {
+    return dateStr;
+  }
+}
+
+/* ============================================================
+   EKRAN O'LCHAMI O'ZGARGANDA
+   ============================================================ */
+window.addEventListener('resize', () => {
+  ['bio', 'resume', 'post'].forEach(id => {
+    const win = document.getElementById('win-' + id);
+    if (!win || win.style.display === 'none') return;
+    const maxW = window.innerWidth  - 80;
+    const maxH = window.innerHeight - 120;
+    if (win.offsetWidth  > maxW) win.style.width  = maxW + 'px';
+    if (win.offsetHeight > maxH) win.style.height = maxH + 'px';
+    win.style.left = Math.min(parseInt(win.style.left)||0, Math.max(0, window.innerWidth  - win.offsetWidth))  + 'px';
+    win.style.top  = Math.min(parseInt(win.style.top) ||0, Math.max(0, window.innerHeight - win.offsetHeight)) + 'px';
+  });
+});
+
+/* ─── ANDROID CHRON ─── */
+(function(){
+  function ac(){
+    const n=new Date();
+    document.getElementById('sb-time').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  }
+  ac(); setInterval(ac,15000);
+})();
+
+/* ─── ANDROID WEATHER ─── */
+fetch('https://api.open-meteo.com/v1/forecast?latitude=41.2995&longitude=69.2401&current=temperature_2m,weathercode,apparent_temperature,relative_humidity_2m,wind_speed_10m&timezone=Asia/Tashkent')
+  .then(r=>{if(!r.ok)throw new Error(r.status);return r.json();})
+  .then(d=>{
+    const c=d.current;
+    const WC={0:'☀️ Ochiq',1:'🌤 Asosan ochiq',2:'⛅ Qisman bulutli',3:'☁️ Bulutli',45:'🌫 Tuman',51:'🌦 Yomg\'ir',61:'🌧 Yomg\'ir',71:'❄️ Qor',80:'🌦 Yomg\'ir',95:'⛈ Momaqaldiroq'};
+    const code=c.weathercode;
+    document.getElementById('ww-temp').textContent=Math.round(c.temperature_2m)+'°';
+    document.getElementById('ww-desc').textContent=WC[code]||WC[Math.floor(code/10)*10]||'🌤 Ochiq';
+    document.getElementById('ww-hum').textContent=c.relative_humidity_2m+'%';
+    document.getElementById('ww-wind').textContent=Math.round(c.wind_speed_10m)+' km/h';
+    document.getElementById('ww-feel').textContent=Math.round(c.apparent_temperature)+'°';
+  }).catch(()=>{
+    document.getElementById('ww-temp').textContent='--°';
+    document.getElementById('ww-desc').textContent='Toshkent';
+  });
+
+/* ─── ANDROID MENU DRAWER ─── */
+(function(){
+  const APPS = [
+    {name:"Biography", icon:"icons/biography.png", id:'bio'},
+    {name:"Post",      icon:"icons/postx.png",     id:'post'},
+    {name:"Resume",    icon:"icons/resume.png",    id:'resume'},
+    {name:"Kontakt",   icon:"icons/contact-a.png", id:'contact'},
+  ];
+  const appGrid=document.getElementById('drawer-apps');
+  APPS.forEach(a=>{
+    const el=document.createElement('div');
+    el.className='drawer-app'; el.dataset.name=a.name.toLowerCase();
+    el.innerHTML=`<div class="da-icon"><img src="${a.icon}" alt="${a.name}" onerror="this.parentNode.innerHTML='📱'"></div><div class="da-lbl">${a.name}</div>`;
+    el.onclick=()=>{closeMenuDrawer();setTimeout(()=>openScreen(a.id),200);};
+    appGrid.appendChild(el);
+  });
+  const social=document.getElementById('drawer-social');
+  LINKS.forEach(lnk=>{
+    const el=document.createElement('div');
+    el.className='social-row'; el.dataset.name=lnk.name.toLowerCase();
+    el.innerHTML=`<div class="sr-icon"><img src="${lnk.logo}" onerror="this.parentNode.innerHTML='🔗'"></div><span class="sr-name">${lnk.name}</span><span class="sr-arrow">›</span>`;
+    el.onclick=()=>{closeMenuDrawer();setTimeout(()=>showConfirmM(lnk),300);};
+    social.appendChild(el);
+  });
+})();
+
+function openMenuDrawer(){
+  const ov=document.getElementById('overlay');
+  const dr=document.getElementById('menu-drawer');
+  if(!ov||!dr)return;
+  ov.classList.add('open');
+  requestAnimationFrame(()=>dr.classList.add('open'));
+  const inp=document.getElementById('drawer-search-inp');
+  if(inp){inp.value='';filterDrawer('');}
+}
+function closeMenuDrawer(){
+  const dr=document.getElementById('menu-drawer');
+  if(!dr)return;
+  dr.classList.remove('open');
+  setTimeout(()=>{
+    const ov=document.getElementById('overlay');
+    if(ov)ov.classList.remove('open');
+  },320);
+}
+function filterDrawer(q){
+  const lq=q.toLowerCase();
+  document.querySelectorAll('#drawer-apps .drawer-app').forEach(el=>el.style.display=(!q||el.dataset.name.includes(lq))?'':'none');
+  document.querySelectorAll('#drawer-social .social-row').forEach(el=>el.style.display=(!q||el.dataset.name.includes(lq))?'':'none');
+}
+
+/* ─── ANDROID SCREENS ─── */
+function openScreen(id){
+  const s=document.getElementById('screen-'+id);
+  if(!s)return;
+  s.style.display='flex';
+  requestAnimationFrame(()=>s.classList.add('open'));
+  if(id==='post') loadPostsM();
+}
+function closeScreen(id){
+  const s=document.getElementById('screen-'+id);
+  if(!s)return;
+  s.querySelectorAll('video').forEach(v=>v.pause());
+  s.classList.remove('open');
+  setTimeout(()=>s.style.display='none',300);
+}
+
+/* ─── ANDROID NAV ─── */
+function navBack(){
+  const screens=document.querySelectorAll('.screen.open');
+  if(screens.length){
+    const last=screens[screens.length-1];
+    const id=last.id.replace('screen-','');
+    closeScreen(id);
+  }
+}
+function navHome(){
+  document.querySelectorAll('.screen.open').forEach(s=>{
+    s.querySelectorAll('video').forEach(v=>v.pause());
+    s.classList.remove('open');
+    setTimeout(()=>s.style.display='none',300);
+  });
+  closeMenuDrawer();
+}
+function navRecent(){ openMenuDrawer(); }
+
+/* ─── ANDROID BIO LANG ─── */
+let mLang='uz';
+function toggleLangPopup(){
+  const p=document.getElementById('m-lang-popup');
+  if(p)p.classList.toggle('open');
+}
+function setLangM(code){
+  mLang=code;
+  document.querySelectorAll('#screen-bio .bio-block').forEach(b=>b.classList.remove('active'));
+  const t=document.getElementById('m-bio-'+code);
+  if(t)t.classList.add('active');
+  const f=document.getElementById('m-lang-flag');
+  const n=document.getElementById('m-lang-name');
+  const m={uz:['icons/flag-uz.png',"O'zbek"],eng:['icons/flag-eng.png','English'],de:['icons/flag-de.png','Deutsch'],fr:['icons/flag-fr.png','Français'],es:['icons/flag-es.png','Español'],it:['icons/flag-it.png','Italiano']};
+  if(f&&m[code])f.src=m[code][0];
+  if(n&&m[code])n.textContent=m[code][1];
+  const p=document.getElementById('m-lang-popup');
+  if(p)p.classList.remove('open');
+}
+document.addEventListener('click',function(e){
+  const b=document.getElementById('m-lang-btn');
+  const p=document.getElementById('m-lang-popup');
+  if(p&&p.classList.contains('open')&&b&&!b.contains(e.target)&&!p.contains(e.target)){
+    p.classList.remove('open');
+  }
+});
+
+/* ─── ANDROID PDF ─── */
+function openPdfM(file,name){
+  document.getElementById('pdf-screen-title').textContent=name;
+  document.getElementById('m-pdf-frame').src=file;
+  const dl=document.getElementById('pdf-dl-btn');
+  if(dl){dl.href=file;dl.download=file;}
+  openScreen('pdf');
+}
+
+/* ─── ANDROID POSTS ─── */
+function loadPostsM(){
+  const body=document.getElementById('post-body');
+  if(!body)return;
+  fetch('posts.json')
+    .then(r=>{if(!r.ok)throw new Error();return r.json();})
+    .then(posts=>{
+      if(!posts||!posts.length){
+        body.innerHTML='<div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,0.4);font-size:14px;">📭 Hali post yo\'q</div>';
+        return;
+      }
+      body.innerHTML='';
+      [...posts].reverse().forEach(post=>{
+        const d=document.createElement('div');
+        d.className='post-card';
+        const ds=function(s){if(!s)return'';try{const d=new Date(s.replace(' ','T'));const MN=['Yan','Feb','Mar','Apr','May','Iyn','Iyl','Avg','Sen','Okt','Noy','Dek'];return d.getDate()+' '+MN[d.getMonth()]+' '+d.getFullYear()+', '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}catch{return s;}}(post.date);
+        const es=str=>String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        let media='';
+        if(post.video) media=`<video controls class="post-vid-el"><source src="${es(post.video)}" type="video/mp4"></video>`;
+        else if(post.image) media=`<img src="${es(post.image)}" alt="" class="post-img-el" onerror="this.style.display='none'">`;
+        d.innerHTML=`<div class="post-hd"><div class="post-av">XQ</div><div><div class="post-uname">Xondamir Qarshiboyev</div><div class="post-date">${es(ds)}</div></div></div>${post.title?'<div class="post-title-txt">'+es(post.title)+'</div>':''}<div class="post-text-txt">${es(post.text)}</div>${media}`;
+        body.appendChild(d);
+      });
+      const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(!e.isIntersecting)e.target.pause();});},{threshold:0.3});
+      body.querySelectorAll('video').forEach(v=>obs.observe(v));
+    })
+    .catch(()=>{
+      body.innerHTML='<div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,0.4);font-size:14px;">📂 posts.json topilmadi</div>';
+    });
+}
+
+/* ─── ANDROID CONFIRM ─── */
+let cfUrl='';
+function showConfirmM(lnk){
+  cfUrl=lnk.url;
+  document.getElementById('cfm-img').src=lnk.logo;
+  document.getElementById('cfm-pname').textContent=lnk.name;
+  document.getElementById('cfm-purl').textContent=lnk.url;
+  document.getElementById('cfm-msg').textContent=lnk.name+' sahifasiga o\'tmoqchimisiz?';
+  document.getElementById('cfm-yes-btn').onclick=()=>{window.open(cfUrl,'_blank','noopener,noreferrer');closeConfirmM();};
+  document.getElementById('confirm-sheet').classList.add('open');
+}
+function closeConfirmM(){
+  const s=document.getElementById('confirm-sheet');
+  if(s)s.classList.remove('open');
+}
+
+/* ─── ANDROID SWIPE CLOSE DRAWER ─── */
+(function(){
+  const dr=document.getElementById('menu-drawer');
+  if(!dr)return;
+  let sy=0;
+  dr.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
+  dr.addEventListener('touchend',e=>{
+    const dy=e.changedTouches[0].clientY-sy;
+    if(dy>80)closeMenuDrawer();
+  },{passive:true});
+})();
+
+/* Tilni ishga tushirish — O'zbek tili */
+setLanguage('uz');
+
+</script>
+<script>
+/* Search — to'g'ridan-to'g'ri ishga tushadi */
+(function() {
+  const inp = document.getElementById('search-input');
+  const drp = document.getElementById('search-dropdown');
+  if (!inp || !drp) return;
+
+  inp.addEventListener('input', () => {
+    const query = inp.value.trim().toLowerCase();
+    drp.innerHTML = '';
+    if (!query) { drp.classList.remove('open'); return; }
+    const results = getAllItems().filter(i => i.name.toLowerCase().includes(query));
+    if (results.length === 0) {
+      drp.innerHTML = '<div class="search-empty">' + t('search_empty') + '</div>';
+    } else {
+      results.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'search-item';
+        el.innerHTML = `
+          <div class="si-icon">
+            <img src="${item.icon}" alt="${item.name}" onerror="this.style.display='none'"/>
+          </div>
+          <div>
+            <div class="si-name">${item.name}</div>
+            <div class="si-type">${item.type}</div>
+          </div>`;
+        el.onclick = () => {
+          item.action();
+          inp.value = '';
+          drp.classList.remove('open');
+        };
+        drp.appendChild(el);
+      });
+    }
+    drp.classList.add('open');
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#searchbar')) {
+      drp.classList.remove('open');
+      inp.value = '';
+    }
+  });
+
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      drp.classList.remove('open');
+      inp.value = '';
+    }
+  });
+})();
+</script>
+</body>
+</html>
