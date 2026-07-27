@@ -10,20 +10,20 @@
       "date": "2026-06-18 14:56",
       "title": "O captaon my captain",
       "text": "test uchun",
-      "video": "videos/O_captain_my_captain.mp4"  
+      "video": "videos/O_captain_my_captain.mp4"
     },
 
     {
    "date":  "2026-06-01 14:30",
    "title": "HTB — Academy Machine",
     "text":  "Nihoyat ushbu mashinani ham pwn qildim! test"
-  },
-       {
+    },
+    {
    "date":  "2026-07-28 04:08",
    "title": "Better call Soul",
     "text":  "-bu shunchaki serial emas, san'at asari, butun boshli bir roman. Eng yoqtirgan serialim",
     "video": "videos/Better_call_Soul.mp4"
-  }
+    }
 ]
 
 
